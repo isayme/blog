@@ -4,7 +4,7 @@ WORKDIR /app
 
 # copy package.json & package-lock.json
 COPY package*.json yarn.lock ./
-RUN yarn install --production && yarn cache clean
+RUN yarn install --silent --production && yarn cache clean
 
 # copy code
 COPY . .
