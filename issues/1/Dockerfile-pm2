@@ -1,0 +1,16 @@
+# donot use pm2 offical image
+FROM node:6.12.0-alpine
+
+RUN npm i -g pm2
+
+WORKDIR /app
+
+# copy package.json & package-lock.json
+COPY package*.json .
+RUN npm i --production
+
+# copy code
+COPY . .
+
+# start with configure from pm2.json
+CMD pm2-docker start pm2.json
