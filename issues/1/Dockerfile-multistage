@@ -1,6 +1,5 @@
 FROM node:6.12.0-alpine AS builder
-
-WORKDIR /tmp
+WORKDIR /app
 
 # add other deps required here such as git~
 
@@ -9,10 +8,12 @@ COPY package*.json .
 RUN npm i --production && npm cache clean
 
 FROM node:6.12.0-alpine
+WORKDIR /app
+
+COPY --from=builder /app/node_modules ./node_modules
 
 # copy code
 COPY . .
-COPY --from=builder /tmp/node_modules ./node_modules
 
 # start
 CMD npm start
