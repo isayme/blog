@@ -10,4 +10,5 @@ RUN npm i --production && npm cache clean
 COPY . .
 
 # start
+# prefer node path-to-app.js
 CMD npm start

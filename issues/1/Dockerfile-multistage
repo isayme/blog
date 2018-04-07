@@ -16,4 +16,5 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY . .
 
 # start
+# prefer node path-to-app.js
 CMD npm start
