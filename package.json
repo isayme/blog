@@ -13,8 +13,7 @@
     "github-markdown-css": "^2.10.0",
     "marked": "^0.5.2",
     "vue": "^2.5.17",
-    "vue-router": "^3.0.1",
-    "vuex": "^3.0.1"
+    "vue-router": "^3.0.1"
   },
   "devDependencies": {
     "@vue/cli-plugin-eslint": "^3.1.5",
