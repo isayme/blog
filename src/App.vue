@@ -1,6 +1,6 @@
 <template>
   <el-row type="flex">
-    <el-col :span="16" :offset="4">
+    <el-col>
       <el-container id="app">
         <el-header>
           <el-menu mode="horizontal" :router="true">
@@ -35,15 +35,12 @@
 
 .blog .title {
   padding: 0.3em;
+  padding-left: 0;
   margin: 0.3em;
-}
-
-.blog h1, h2 {
-  text-align: center;
+  margin-left: 0;
 }
 
 .blog .meta {
-  text-align: center;
   font-size: 1em;
   margin-bottom: 0.7em;
 }
@@ -55,10 +52,6 @@
   vertical-align:middle;
 }
 
-.blog .labels {
-  text-align: center;
-}
-
 .blog .labels .label {
   color: white;
   font-weight: 600;
@@ -67,9 +60,5 @@
 
 .blog .body {
   margin-top: 2em;
-}
-
-.center {
-  text-align: center;
 }
 </style>
