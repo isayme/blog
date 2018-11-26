@@ -33,7 +33,7 @@ export default {
   },
   methods: {
     renderBody (body) {
-      return marked(body, { gfm: true })
+      return marked(body, { gfm: true, breaks: true, silent: true })
     },
     getBlog (route) {
       this.loading = true
