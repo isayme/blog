@@ -1,13 +1,17 @@
 <template>
-  <el-container id="app">
-    <el-header>
-      <el-menu mode="horizontal" :router="true">
-        <el-menu-item index="/">Home</el-menu-item>
-        <el-menu-item index="/blogs">Blogs</el-menu-item>
-      </el-menu>
-    </el-header>
-    <router-view></router-view>
-  </el-container>
+  <el-row type="flex" class="row-bg" justify="center">
+    <el-col :span="24" :md="14">
+      <el-container id="app">
+        <el-header>
+          <el-menu mode="horizontal" :router="true">
+            <el-menu-item index="/">Home</el-menu-item>
+            <el-menu-item index="/blogs">Blogs</el-menu-item>
+          </el-menu>
+        </el-header>
+        <router-view></router-view>
+      </el-container>
+    </el-col>
+  </el-row>
 </template>
 
 <style>

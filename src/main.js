@@ -1,6 +1,6 @@
 import Vue from 'vue'
 
-import { Container, Header, Main, Menu, MenuItem, Tag, Loading } from 'element-ui'
+import { Container, Header, Main, Menu, MenuItem, Tag, Loading, Col, Row } from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
 
 import App from './App.vue'
@@ -13,6 +13,8 @@ Vue.use(Loading)
 Vue.use(Menu)
 Vue.use(MenuItem)
 Vue.use(Tag)
+Vue.use(Col)
+Vue.use(Row)
 
 Vue.config.productionTip = false
 
