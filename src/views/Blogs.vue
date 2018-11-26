@@ -3,7 +3,7 @@
     <div class="blog" v-for="blog in blogs" :key="blog.id">
       <h1 class="title" @click="gotoBlog(blog.number)">{{ blog.title }}</h1>
       <div class="meta">
-        <img class="avatar" :src="blog.user.avatar_url">{{ blog.user.login }}, {{ blog.created_at }}
+        <img class="avatar" :src="blog.user.avatar_url">{{ blog.user.login }}, {{ blog.created_at }}, <a target="_blank" :href="blog.html_url">Github Issue #{{ blog.number }}</a>
       </div>
 
       <div class="labels">
