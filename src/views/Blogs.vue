@@ -11,7 +11,6 @@
           {{ label.name }}
         </el-tag>
       </div>
-
     </div>
   </el-main>
 </template>
