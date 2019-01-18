@@ -17,4 +17,4 @@ COPY . .
 
 # start
 # prefer node path-to-app.js
-CMD npm start
+CMD ["npm", "start"]
