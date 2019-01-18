@@ -13,4 +13,4 @@ RUN npm i --production && npm cache clean
 COPY . .
 
 # start with configure from pm2.json
-CMD pm2-docker start pm2.json
+CMD ["pm2-docker", "start", "pm2.json"]
