@@ -1,0 +1,3 @@
+[submodule "themes/simpleness"]
+	path = themes/simpleness
+	url = https://github.com/RainerChiang/simpleness.git

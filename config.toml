@@ -1,0 +1,4 @@
+baseURL = "https://blog.isayme.org/"
+languageCode = "en-us"
+title = "BLOG - ISAYME"
+theme = "simpleness"
