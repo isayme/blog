@@ -22,10 +22,14 @@ jobs:
       - name: Install Deps
         run: npm install @actions/github
 
-      - name: Update Issue
+      - name: Commit files
         if: github.event.action == 'opened' || github.event.action == 'edited'
         run: |
           node ./script/update-issue.js
           git add ./content
-          git commit -m "update content/posts/${{ github.event.issue.id }}.md"
-          git push
+          git commit -a -m "update content/posts/${{ github.event.issue.id }}.md"
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
