@@ -47,6 +47,7 @@ tags: []
 不推荐 Google Authenticator, 因为其不支持云端同步.
 
 - [LastPass Authenticator](https://lastpass.com/auth/)
+- [Microsoft Authenticator](https://www.microsoft.com/zh-cn/account/authenticator)
 - [Twillo Authy](https://authy.com/)
 
 # 参考资料
