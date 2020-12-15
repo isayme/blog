@@ -1,11 +1,11 @@
 ---
 title: 'Lerna 学习笔记'
 date: 2020-10-15T11:37:21Z
-tags: []
+tags: ["Node.js"]
 
 ---
 
-# 是什么
+# Lerna 是什么
 > A tool for managing JavaScript projects with multiple packages.
 
 [Lerna](https://lerna.js.org/) 是一个管理工具，用于管理包含多个软件包（package）的 JavaScript 项目。
