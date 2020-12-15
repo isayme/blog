@@ -26,6 +26,8 @@ jobs:
         if: github.event.action == 'opened' || github.event.action == 'edited'
         run: |
           node ./script/update-issue.js
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add ./content
           git commit -a -m "update content/posts/${{ github.event.issue.id }}.md"
 
