@@ -2,7 +2,7 @@ name: ISSUE
 
 on:
   issues:
-    types: [opened, edited, deleted]
+    types: [opened, edited, deleted, labeled, unlabeled]
 
 jobs:
   build:
@@ -23,13 +23,22 @@ jobs:
         run: npm install @actions/github
 
       - name: Commit files
-        if: github.event.action == 'opened' || github.event.action == 'edited'
+        if: github.event.action == 'opened' || github.event.action == 'edited' || github.event.action == 'labeled' || github.event.action == 'unlabeled'
         run: |
           node ./script/update-issue.js
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add ./content
           git commit -a -m "update content/posts/${{ github.event.issue.number }}.md"
+
+      - name: Commit files
+        if: github.event.action == 'deleted'
+        run: |
+          node ./script/update-issue.js
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git rm ./content/posts/${{ github.event.issue.number }}.md
+          git commit -a -m "remove content/posts/${{ github.event.issue.number }}.md"
 
       - name: Push changes
         uses: ad-m/github-push-action@master
