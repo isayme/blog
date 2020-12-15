@@ -19,13 +19,13 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Show Issue Info
-        run: echo ${{ github.event.issue }}
+      - name: Install Deps
+        run: npm install @actions/github
 
       - name: Update Issue
         if: github.event.action == 'opened' || github.event.action == 'edited'
         run: |
           node ./script/update-issue.js
           git add ./content
-          git cm "update content/issue/${{ github.event.issue.id }}"
+          git commit -m "update content/posts/${{ github.event.issue.id }}.md"
           git push

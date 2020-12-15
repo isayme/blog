@@ -1,6 +1,7 @@
 const fs = require('fs')
+const github = require('@actions/github')
 
-const issue = process.env.github.event
+const { issue } = github.context.payload
 
 const contents = []
 contents.push('---')
@@ -12,4 +13,7 @@ contents.push(
 contents.push('---\n')
 contents.push(issue.body)
 
-fs.writeFileSync(`./posts/issues-${issue.number}.md`, contents.join('\n'))
+fs.writeFileSync(
+  `./content/posts/issues-${issue.number}.md`,
+  contents.join('\n'),
+)
