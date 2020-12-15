@@ -1,0 +1,26 @@
+name: ISSUE
+
+on:
+  issues:
+    types: [opened, edited, deleted]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Node.js 14
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: '14'
+
+      - name: Show Issue Info
+        run: echo ${{ github.event.issue }}
+
+      - name: Update Issue
+        if: github.event.action == 'opened' || github.event.action == 'edited'
+        run: |
+          node ./script/update-issue.js
+          git add ./content
+          git cm "update content/issue/${{ github.event.issue.id }}"
+          git push
