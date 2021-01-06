@@ -89,8 +89,8 @@ content 是具体 field 值(可能是加密后的值).
 - username 需要 aes256解密
 - password 需要 aes256解密
 - unknown 未知含义字段
-- - unknown 未知含义字段
-- - secureNote
+- unknown 未知含义字段
+- secureNote
 
 其中 name 等字段主要使用 `aes-256-cbc` 加密, 密钥即为前文的 key.
 
