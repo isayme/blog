@@ -1,5 +1,5 @@
 ---
-title: 'Redis 持久化 AOF 未过期字段恢复时过期时间重置问题。'
+title: 'Redis 持久化 AOF 未过期字段恢复时过期时间重置问题'
 date: 2021-10-21T12:26:59Z
 tags: []
 
@@ -14,5 +14,7 @@ Redis AOF 核心原理已协议文本方式记录数据库写入命令。
 
 由于 AOF 恢复的机制是回放命令，导致恢复后的 key `A` 的过期时间重置为`相对当前时间`之后的 30 秒。
 如果 redis 服务并没有异常关闭，key `A` 理应早已过期。
+
+另，RDB 恢复不会有如上类似的问题。
 
 - [AOF - Redis 设计与实现](https://redisbook.readthedocs.io/en/latest/internal/aof.html)
