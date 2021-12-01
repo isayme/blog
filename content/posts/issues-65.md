@@ -62,7 +62,7 @@ docker restart unifreq-openwrt-aarch64
 操作: 1. `IPv4 网关` 改为 `192.168.4.1`; 2. `IPv4 广播` 改为 `192.168.1.255`; 3. `使用自定义的 DNS 服务器` 改为 `192.168.4.1`
 ![image](https://user-images.githubusercontent.com/1747852/144264306-03f3d951-54a9-48b6-9ce7-5cad24408297.png)
 
-## 9. 配置主路由, 将
+## 9. 配置主路由
 目前主路由下的设备可以在网络设置中将路由器的地址改为`192.168.4.11`即可实现通过旁路由上网.
 为了避免各个设备分别配置, 达到全局使用旁路由的目的, 可以配置主路由: 将 DHCP 默认网关 和 DNS 都改为 `192.168.4.11`
 ![image](https://user-images.githubusercontent.com/1747852/144265148-ae38c859-3c2d-41f7-b53f-24949d54fe88.png)
