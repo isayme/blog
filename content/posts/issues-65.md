@@ -61,7 +61,7 @@ docker restart unifreq-openwrt-aarch64
 操作: 1. `IPv4 网关` 改为 `192.168.4.1`; 2. `IPv4 广播` 改为 `192.168.1.255`; 3. `使用自定义的 DNS 服务器` 改为 `114.114.114.114`
 ![image](https://user-images.githubusercontent.com/1747852/144266331-6ebd76d9-be64-485c-8f96-a42ce909319d.png)
 
-## 9. 主路由是系统需要的配置
+## 9. 主路由系统是 `Padavan` 需要的配置
 将 `IPv4 硬件加速` 改为 `Offload TCP/UDP for LAN`.
 ![image](https://user-images.githubusercontent.com/1747852/144273414-1e0557bb-7c0d-4022-bf5c-3b3e9eef3d3d.png)
  
