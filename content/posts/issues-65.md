@@ -6,11 +6,10 @@ tags: []
 ---
 
 # 说明
-当前我的网络情况:
-1. 主路由的子网网段是 `192.168.4.0/24`;
-2. N1 路由器的 IP 是 `192.168.4.2`;
-
-计划安装的 Openwrt 使用 IP `192.168.4.11`.
+我的网络情况:
+1. 主路由 IP 是 `192.168.4.1`;
+2. N1 Armbian IP 是 `192.168.4.2`;
+3. Openwrt IP 是 `192.168.4.11`.
 
 # Openwrt 安装及配置
 ## 1. 开启网卡混杂模式
@@ -66,12 +65,24 @@ docker restart unifreq-openwrt-aarch64
 将 `IPv4 硬件加速` 改为 `Offload TCP/UDP for LAN`.
 ![image](https://user-images.githubusercontent.com/1747852/144273414-1e0557bb-7c0d-4022-bf5c-3b3e9eef3d3d.png)
  
-## 10. 配置主路由
+## 10. 宿主机与Openwrt互通, 宿主机访问外网
+目前宿主机无法访问 Openwrt 以及外网, 需要的配置: 在 /etc/rc.local 中增加初始化逻辑:
+```
+ip link add mynet link eth0 type macvlan mode bridge 
+ip addr add 192.168.4.2 dev mynet
+ip link set mynet up
+ip route add 192.168.4.11 dev mynet
+```
+
+## 11. 配置主路由
 目前主路由下的设备可以在网络设置中将路由器的地址改为`192.168.4.11`即可实现通过旁路由上网.
 为了避免各个设备分别配置, 达到全局使用旁路由的目的, 可以配置主路由: 将 DHCP 默认网关 和 DNS 都改为 `192.168.4.11`
 ![image](https://user-images.githubusercontent.com/1747852/144265148-ae38c859-3c2d-41f7-b53f-24949d54fe88.png)
 
-
 # 资料
 - 主要参考文章 [Docker下安装/升级Openwrt](https://touchren.pub/2020/11/16/openwrt-in-docker/)
+- [N1盒子 docker openwrt 踩坑的几个小问题解决过程分享](https://www.right.com.cn/forum/thread-1048535-1-1.html)
+- [在Docker 中运行 OpenWrt 旁路网关](https://mlapp.cn/376.html)
+- [Docker 部署的 openWrt 软路由, 并解决无法与宿主机通信问题](https://www.treesir.pub/post/n1-docker/)
+- [Armbian Docker Openwrt 旁路由详细设置教程](https://www.otakusay.com/874.html)
 - [N1 openwrt 镜像信息](https://www.right.com.cn/forum/thread-958173-1-1.html)
