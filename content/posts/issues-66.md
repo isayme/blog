@@ -97,7 +97,8 @@ public class Destination {
 	private String k;  
 }
 
-@Mapper(componentModel = "spring")  
+// @Mapper(componentModel = "spring")  如未配置defaultComponentModel=spring，可以在此处配置。
+@Mapper
 public interface Converter {  
 	Destination convertToDestination(Source s);  
 }
