@@ -3,3 +3,6 @@ languageCode = "en-us"
 title = "BLOG - ISAYME"
 theme = "harbor"
 summaryLength = 1
+
+[params]
+customCSS = ["/css/custom.css"] # in case you use `/static/css/custom.css`
