@@ -8,7 +8,7 @@ tags: []
 > 本文记录了一些 `ESM 使用` 以及 `ESM 和 CommonJS 互相引用`的知识点，假定你对 CommonJS 和 ESM 有一定的了解。
 > 你也可以参考 [阮一峰: ESM Module 的语法](https://es6.ruanyifeng.com/#docs/module) 和 [阮一峰: ESM Module 的加载实现](https://es6.ruanyifeng.com/#docs/module-loader) 获取更多信息。
 
-首先，较新的 NodeJS 版本(>=16)可以加载 CommonJS 和 ESM，用户需指明具体某些文件是什么模块类型。可以简单参考如下：
+较新的 NodeJS 版本(>=13.2.0)可以加载 CommonJS 和 ESM，用户需指明具体某些文件是什么模块类型。可以简单参考如下：
 ![image](https://github.com/isayme/blog/assets/1747852/e416400e-f7bf-4c87-bf8d-324a0d36e0d6)
 
 # ESM import 常用场景
