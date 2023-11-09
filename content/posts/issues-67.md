@@ -12,7 +12,7 @@ tags: []
 ![image](https://github.com/isayme/blog/assets/1747852/e416400e-f7bf-4c87-bf8d-324a0d36e0d6)
 
 # ESM import 常用场景
-一图胜千言
+一图胜千言:
 ![image](https://github.com/isayme/blog/assets/1747852/f686ae53-8116-47bf-be6f-812a1d7d3cb1)
 
 ## import { add } from 'moduleA'
