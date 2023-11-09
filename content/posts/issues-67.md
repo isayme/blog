@@ -36,7 +36,7 @@ export default {
 ```
 
 ## import * as moduleA from 'moduleA'
-此时 moduleA 对应模块 `moduleA` 中的所有导出的变量，包括`default`。
+此时 moduleA 对应模块 `moduleA` 中的 `namespace object`, 可简单理解为所有导出的变量，包括`default`。
 ```
 // moduleA.mjs
 export function add(a, b) {
