@@ -13,7 +13,7 @@ tags: []
 
 # ESM import 常用场景
 一图胜千言
-<img width="1175" alt="image" src="https://github.com/isayme/blog/assets/1747852/f686ae53-8116-47bf-be6f-812a1d7d3cb1">
+![image](https://github.com/isayme/blog/assets/1747852/f686ae53-8116-47bf-be6f-812a1d7d3cb1")
 
 ## import { add } from 'moduleA'
 此时 add 是 `moduleA` 导出的函数 `add`。
