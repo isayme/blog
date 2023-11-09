@@ -7,7 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    outputs:
+      commit_hash: ${{ steps.git-push.outputs.commit_hash }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,6 +42,7 @@ jobs:
           git commit -a -m "remove content/posts/${{ github.event.issue.number }}.md"
 
       - name: Push changes
+        id: git-push
         run: |
           git push
           echo "commit_hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
