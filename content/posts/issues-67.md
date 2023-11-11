@@ -51,14 +51,15 @@ export default function add(a, b) {
 
 # 模块类型混乱引发的异常
 ## 如果 package.json 中 type = commonjs，尝试运行 ESM 文件，会报错
-！[image](https://github.com/isayme/blog/assets/1747852/e1dbad9f-0696-44af-bbf1-e6864a82ea98)
+![image](https://github.com/isayme/blog/assets/1747852/e1dbad9f-0696-44af-bbf1-e6864a82ea98)
 
-<img width="948" alt="image" src="https://github.com/isayme/blog/assets/1747852/ab61c3b6-a49e-4b5b-9277-8cf415912260">
+![image](https://github.com/isayme/blog/assets/1747852/ab61c3b6-a49e-4b5b-9277-8cf415912260)
 
 ## 如果 package.json 中 type = moudle，尝试运行 CommonJS 文件，会报错
-<img width="1150" alt="image" src="https://github.com/isayme/blog/assets/1747852/37c6e33a-a57b-406c-91ef-ba8f798ac6ee">
 
-<img width="1427" alt="image" src="https://github.com/isayme/blog/assets/1747852/92cddccc-369c-44a6-a8e3-21bed1bf6367">
+![image](https://github.com/isayme/blog/assets/1747852/37c6e33a-a57b-406c-91ef-ba8f798ac6ee)
+
+![image](https://github.com/isayme/blog/assets/1747852/92cddccc-369c-44a6-a8e3-21bed1bf6367)
 
 # CommonJS 文件中引用 ESM 模块
 使用场景较少，此处不谈论。
@@ -99,7 +100,7 @@ export default { add }
 # 一些模块已不再支持 CommonJS
 如 [chalk](https://www.npmjs.com/package/chalk) 在 `5.x` 版本中完全使用 ESM 语法，不再支持 CommonJS。
 
-<img width="745" alt="image" srchttps://github.com/isayme/blog/assets/1747852/5dc70e2b-c30c-41e6-beb2-1324e236005f">
+![image](https://github.com/isayme/blog/assets/1747852/5dc70e2b-c30c-41e6-beb2-1324e236005f)
 其中背景可参见 [Pure ESM package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c#pure-esm-package) 。
 
 
