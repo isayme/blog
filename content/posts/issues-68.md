@@ -24,7 +24,7 @@ GnuPG 全称 GUN Privacy Guard, 是对 PGP 的开源实现。
 1. A 通过安全的方式获取 B 的公钥；（具体什么方式不限，比如 B 可以将公钥放公网）
 2. A 用 B 的公钥加密银行卡密码，将加密后的内容传给 B；
 3. B 使用 B 的私钥解密收到的密文，得到银行卡密码明文；
-<img width="530" alt="image" src="https://github.com/isayme/blog/assets/1747852/e8fe1af5-66da-4f87-bdf6-b475e03a6aa2">
+![](https://github.com/isayme/blog/assets/1747852/e8fe1af5-66da-4f87-bdf6-b475e03a6aa2)
 
 ## 数字签名过程
 假定有份商业合同需要A签字，B需要验证A签名了且合同内容没有被人篡改，签名过程？
@@ -33,7 +33,7 @@ GnuPG 全称 GUN Privacy Guard, 是对 PGP 的开源实现。
 2. A 将合同和签名信息一起发送给 B；
 3. B 通过安全的方式获取 A 的公钥；
 5. B 使用 A 的公钥对收到的 签名做验证，验证通过后才认为合同内容可信；
-<img width="471" alt="image" src="https://github.com/isayme/blog/assets/1747852/a5665ad4-4c2d-40e1-a94b-ba4f412d4e73">
+![](https://github.com/isayme/blog/assets/1747852/a5665ad4-4c2d-40e1-a94b-ba4f412d4e73)
 
 # 安装 GnuPG
 GnuPG 官网：[https://www.gnupg.org](https://www.gnupg.org/)
