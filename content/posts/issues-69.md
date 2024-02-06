@@ -119,6 +119,9 @@ ssh-agent 可以解决问题: 它让用户在整个 Bash 对话（session）之�
 编辑 `~/.zshrc`, 添加 `ssh-agent`到插件列表：
 ```
 plugins=(git ssh-agent)
+
+# 建议同时添加此配置，避免启动 ssh-agent 时就加载私钥
+zstyle :omz:plugins:ssh-agent lazy yes
 ```
 执行`source ~/.zshrc`使改动生效。
 
