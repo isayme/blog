@@ -115,11 +115,13 @@ ssh-agent 可以解决问题: 它让用户在整个 Bash 对话（session）之�
 即使有了 ssh-agent，每次使用也需要手动启动 ssh-agent ，还是不够方便。
 
 为了避免手动维护 ssh-agent 状态，可以使用一些脚本，如果你在用 [oh my zsh](https://ohmyz.sh/), 还可以使用插件：
+
 编辑 `~/.zshrc`, 添加 `ssh-agent`到插件列表：
 ```
 plugins=(git ssh-agent)
 ```
 执行`source ~/.zshrc`使改动生效。
+
 客户端配置记得加上 `AddKeysToAgent`配置项，使用到此私钥时，输入密码后会自动添加到 ssh-agent。
 ```
 Host *
