@@ -7,6 +7,7 @@ tags: []
 
 # 配置文件位置
 客户端配置文件：`~/.ssh/config`, 更多信息可参考 [https://wangdoc.com/ssh/client](https://wangdoc.com/ssh/client)
+
 服务端配置文件：`/etc/ssh/sshd_config`, 更多信息可参考 [https://wangdoc.com/ssh/server](https://wangdoc.com/ssh/server)
 
 # 配置：是否允许密码登录
@@ -56,6 +57,7 @@ PubkeyAuthentication no
 ```
 ## 将公钥上传到服务器
 公钥内容需要保存在服务器的`~/.ssh/authorized_keys` 文件中，每个文件占用一行。
+
 可以手动也可以使用命令辅助修改对应文件：
 ```
 # cat ~/.ssh/id_rsa.pub | ssh user@host "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
@@ -93,7 +95,9 @@ Host hostname
 ```
 # ssh-agent: 解决 ssh 私钥密码频繁输入问题
 新建密钥时，为了更加安全，可以设置私钥密码，即使私钥丢失，没有私钥密码也无法使用。
+
 但是安全带来的问题是每次使用私钥都需要输入私钥密码，很不方便。
+
 ssh-agent 可以解决问题: 它让用户在整个 Bash 对话（session）之中，只在第一次使用 SSH 命令时输入密码，然后将私钥保存在内存中，后面都不需要再输入私钥的密码了。
 > ssh-agent is a program to hold private keys used for public key authentication.  Through use of environment variables the agent can be located and automatically used for authentication when logging in to other machines using ssh.
 
@@ -109,6 +113,7 @@ ssh-agent 可以解决问题: 它让用户在整个 Bash 对话（session）之�
 ```
 # zsh：使用 ssh-agent 插件
 即使有了 ssh-agent，每次使用也需要手动启动 ssh-agent ，还是不够方便。
+
 为了避免手动维护 ssh-agent 状态，可以使用一些脚本，如果你在用 [oh my zsh](https://ohmyz.sh/), 还可以使用插件：
 编辑 `~/.zshrc`, 添加 `ssh-agent`到插件列表：
 ```
