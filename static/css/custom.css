@@ -6,3 +6,9 @@ body,
 .article img {
   max-width: 100%;
 }
+
+.article blockquote {
+  margin-inline-start: 0.5em;
+  margin-inline-end: 0.5em;
+  padding: 0 5px;
+}
