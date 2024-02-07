@@ -122,6 +122,9 @@ plugins=(git ssh-agent)
 
 # 建议同时添加此配置，避免启动 ssh-agent 时就加载私钥
 zstyle :omz:plugins:ssh-agent lazy yes
+
+# 配置私钥添加到ssh-agent有效期，过期后使用私钥重新输入密码
+zstyle :omz:plugins:ssh-agent lifetime 24h
 ```
 执行`source ~/.zshrc`使改动生效。
 
