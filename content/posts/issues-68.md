@@ -5,7 +5,7 @@ tags: []
 
 ---
 
-> 注：以下内容在 Ubuntu 20.04 下验证，使用的 gpp 版本 2.2.19。
+> 注：以下内容在 Ubuntu 20.04 下验证，使用的 pgp 版本 2.2.19。
 
 # 什么是 GnuPG(PGP)
 PGP 全称 `Pretty Good Privacy`, 是由 Phil Zimmermann 于 1991 年开发的用于信息加密和数字签名的程序。
@@ -153,9 +153,9 @@ gpg --receive-keys [uid]
 
 默认的密钥服务是 `keys.gnupg.net`, 可通过参数`--keyserver [key server url]`指定密钥服务器。
 常见的密钥服务器有（[维基](http://en.wikipedia.org/wiki/Key_server_(cryptographic))）：
-https://keyserver.ubuntu.com
-https://pgp.mit.edu
-https://keyring.debian.org
+- https://keyserver.ubuntu.com
+- https://pgp.mit.edu
+- https://keyring.debian.org
 
 # 使用gpg实现数据加密
 
