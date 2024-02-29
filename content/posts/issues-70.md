@@ -85,6 +85,6 @@ Set-Cookie: <cookie-name>=<cookie-value>; Domain=<domain-value>; Secure; HttpOnl
 通常不需要使用，有需要可以查看文档 [Path={path-value}](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie#pathpath-value)。
 
 # 参考资料
-[MDN: Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie)
-[Chrome doesn't delete session cookies](https://stackoverflow.com/questions/10617954/chrome-doesnt-delete-session-cookies)](https://stackoverflow.com/a/10772420/1918831)
-[阮一峰: Cookie 的 SameSite 属性](https://www.ruanyifeng.com/blog/2019/09/cookie-samesite.html)
+- [MDN: Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie)
+- [Chrome doesn't delete session cookies](https://stackoverflow.com/a/10772420/1918831)
+- [阮一峰: Cookie 的 SameSite 属性](https://www.ruanyifeng.com/blog/2019/09/cookie-samesite.html)
