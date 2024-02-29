@@ -9,6 +9,7 @@ tags: []
 以前的网站登录，很多都有个”记住我“功能，这个功能名字并未统一，也有的网站叫“下次自动登录”，也有的叫“十天内免登录”，它们只是名字不同，本质相同。
 
 这里举例微博和网易的登录框：
+
 ![image](https://github.com/isayme/blog/assets/1747852/0f70548c-aad4-4dbd-9110-fa378c6e5347)
 ![image](https://github.com/isayme/blog/assets/1747852/10c07a6e-e655-47d3-bbff-c1d17bd4a887)
 
