@@ -1,0 +1,69 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>SSH 备忘</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="SSH 备忘"><meta name=twitter:description content="配置文件位置 客户端配置文件：~/."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>SSH 备忘</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h1 id=配置文件位置>配置文件位置</h1><p>客户端配置文件：<code>~/.ssh/config</code>, 更多信息可参考 <a href=https://wangdoc.com/ssh/client>https://wangdoc.com/ssh/client</a></p><p>服务端配置文件：<code>/etc/ssh/sshd_config</code>, 更多信息可参考 <a href=https://wangdoc.com/ssh/server>https://wangdoc.com/ssh/server</a></p><h1 id=配置是否允许密码登录>配置：是否允许密码登录</h1><p>服务端配置，配置项 <code>PasswordAuthentication</code>，默认是 <code>yes</code>。</p><pre><code># 允许密码登录
+PasswordAuthentication yes
+
+# 禁止密码登录
+PasswordAuthentication no
+</code></pre><h1 id=配置是否允许-root-用户登录>配置：是否允许 root 用户登录</h1><p>服务端配置，配置项 <code>PermitRootLogin</code>，默认是 <code>yes</code>。</p><pre><code># 允许 root 登录
+PermitRootLogin yes
+
+# 不允许 root 登录
+PermitRootLogin no
+
+# 允许 root 使用密钥登录，但是不允许 root 使用密码登录
+PermitRootLogin prohibit-password
+</code></pre><h1 id=配置是否允许密钥登录>配置：是否允许密钥登录</h1><p>服务端配置，配置项<code>PubkeyAuthentication</code>，默认是 <code>yes</code></p><pre><code># 允许密钥登录
+PubkeyAuthentication yes
+
+# 不允许密钥登录
+PubkeyAuthentication no
+</code></pre><h1 id=配置密钥登录>配置：密钥登录</h1><h2 id=生成密钥>生成密钥</h2><p>执行命令<code>ssh-keygen</code> , 默认使用<code>rsa</code> 算法，可通过 <code>-t</code> 参数指定其他算法, <code>-C</code> 参数增加注释信息。</p><pre><code># ssh-keygen
+# ssh-keygen -t rsa
+# ssh-keygen -t ed25519
+</code></pre><p>过程中会询问私钥文件路径，同时公钥的文件路径在私钥的基础上增加<code>.pub</code> 后缀，例如私钥路径是<code>~/.ssh/id_rsa</code> 公钥路径是 <code>~/.ssh/id_rsa.pub</code></p><p>新生成的私钥默认权限是 600, 公钥权限默认是 644, 建议都改成 600：</p><pre><code># chmod 600 ~/.ssh/id_rsa
+# chmod 600 ~/.ssh/id_rsa.pub
+</code></pre><h2 id=将公钥上传到服务器>将公钥上传到服务器</h2><p>公钥内容需要保存在服务器的<code>~/.ssh/authorized_keys</code> 文件中，每个文件占用一行。</p><p>可以手动也可以使用命令辅助修改对应文件：</p><pre><code># cat ~/.ssh/id_rsa.pub | ssh user@host &quot;mkdir -p ~/.ssh &amp;&amp; cat &gt;&gt; ~/.ssh/authorized_keys&quot;
+
+# 或者使用 ssh 自带命令， key_file 无需带 `.pub` 后缀。
+# ssh-copy-id 命令是添加公钥到 authorized_keys 文件尾，注意 authorized_keys 文件尾有换行。
+# ssh-copy-id -i key_file user@host
+</code></pre><p>注意，<code>authorized_keys</code> 文件权限要是 644，如果权限不对，ssh服务器可能拒绝读取该文件。</p><pre><code># chmod 644 ~/.ssh/authorized_keys
+</code></pre><p>公钥上传到服务器后，下次登录就会自动采用密钥登录，无需输入密码。</p><h2 id=密钥登录时手动指定私钥文件>密钥登录时手动指定私钥文件</h2><p>ssh 登录服务器时默认查找使用的私钥是以下几个：</p><ul><li><code>~/.ssh/id_dsa</code></li><li><code>~/.ssh/id_ecdsa</code></li><li><code>~/.ssh/id_ed25519</code></li><li><code>~/.ssh/id_rsa</code></li></ul><p>如果你的私钥文件不在以上之中，ssh 无法知道是哪一个，这时可以通过 -i 参数指定使用的私钥：</p><pre><code>ssh -i ~/.ssh/id_rsa user@host
+</code></pre><p>或者使用客户端配置 <code>~/.ssh/config</code> 文件</p><pre><code>Host hostname
+  IdentityFile ~/.ssh/mykey
+  IdentitiesOnly yes # 如果有问题可以试试 https://unix.stackexchange.com/a/494485
+</code></pre><h1 id=ssh-agent-解决-ssh-私钥密码频繁输入问题>ssh-agent: 解决 ssh 私钥密码频繁输入问题</h1><p>新建密钥时，为了更加安全，可以设置私钥密码，即使私钥丢失，没有私钥密码也无法使用。</p><p>但是安全带来的问题是每次使用私钥都需要输入私钥密码，很不方便。</p><p>ssh-agent 可以解决问题: 它让用户在整个 Bash 对话（session）之中，只在第一次使用 SSH 命令时输入密码，然后将私钥保存在内存中，后面都不需要再输入私钥的密码了。</p><blockquote><p>ssh-agent is a program to hold private keys used for public key authentication. Through use of environment variables the agent can be located and automatically used for authentication when logging in to other machines using ssh.</p></blockquote><pre><code># 1. 启动 ssh-agent, 在当前 shell 有效。
+# ssh-agent bash 或 eval `ssh-agent`
+
+# 2. 添加私钥，会提示输入私钥密码。完成后使用此私钥登录服务器就不再需要输入密码。
+# ssh-add ~/.ssh/id_rsa
+
+# 3. [可选] 退出 ssh-agent
+# ssh-agent -k
+</code></pre><h1 id=zsh使用-ssh-agent-插件>zsh：使用 ssh-agent 插件</h1><p>即使有了 ssh-agent，每次使用也需要手动启动 ssh-agent ，还是不够方便。</p><p>为了避免手动维护 ssh-agent 状态，可以使用一些脚本，如果你在用 <a href=https://ohmyz.sh/>oh my zsh</a>, 还可以使用插件：</p><p>编辑 <code>~/.zshrc</code>, 添加 <code>ssh-agent</code>到插件列表：</p><pre><code>plugins=(git ssh-agent)
+
+# 建议同时添加此配置，避免启动 ssh-agent 时就加载私钥
+zstyle :omz:plugins:ssh-agent lazy yes
+
+# 配置私钥添加到ssh-agent有效期，过期后使用私钥重新输入密码
+zstyle :omz:plugins:ssh-agent lifetime 24h
+</code></pre><p>执行<code>source ~/.zshrc</code>使改动生效。</p><p>客户端配置记得加上 <code>AddKeysToAgent</code>配置项，使用到此私钥时，输入密码后会自动添加到 ssh-agent。</p><pre><code>Host *
+  AddKeysToAgent yes
+</code></pre><h1 id=安全为私钥新增或修改密码>安全：为私钥新增或修改密码</h1><p>已存在的私钥新增密码或修改密码：</p><pre><code># see https://stackoverflow.com/a/3818909
+# ssh-keygen -p -f ~/.ssh/id_rsa
+</code></pre><pre><code> -p      Requests changing the passphrase of a private key file instead of
+         creating a new private key.  The program will prompt for the file
+         containing the private key, for the old passphrase, and twice for
+         the new passphrase.
+
+ -f filename
+         Specifies the filename of the key file.
+</code></pre><h1 id=参考资料>参考资料</h1><p><a href=https://wangdoc.com/ssh/>阮一峰：SSH教程</a></p></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

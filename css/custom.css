@@ -1,0 +1,18 @@
+body,
+.error-text {
+  font-family: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+.article {
+  text-align: left;
+}
+
+.article img {
+  max-width: 100%;
+}
+
+.article blockquote {
+  margin-inline-start: 0.5em;
+  margin-inline-end: 0.5em;
+  padding: 0 5px;
+}

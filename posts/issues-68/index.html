@@ -1,0 +1,80 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>教程: 使用GnuPG(PGP)对信息做加密或签名</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="教程: 使用GnuPG(PGP)对信息做加密或签名"><meta name=twitter:description content="注：以下内容在 Ubuntu 20."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>教程: 使用GnuPG(PGP)对信息做加密或签名</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><blockquote><p>注：以下内容在 Ubuntu 20.04 下验证，使用的 pgp 版本 2.2.19。</p></blockquote><h1 id=什么是-gnupgpgp>什么是 GnuPG(PGP)</h1><p>PGP 全称 <code>Pretty Good Privacy</code>, 是由 Phil Zimmermann 于 1991 年开发的用于信息加密和数字签名的程序。
+GnuPG 全称 GUN Privacy Guard, 是对 PGP 的开源实现。</p><h1 id=加密和签名原理>加密和签名原理</h1><p>技术层面的原理是非对称加密算法RSA，PGP 是建立在 RSA 基础之上，作为使用者，我们对RSA只需要有如下的了解：</p><ol><li>RSA 算法的加解密使用一对密钥，称为私钥和公钥；</li><li>私钥加密的数据，只有公钥能解密；</li><li>公钥加密的数据，只有私钥能解密；</li><li>公钥可对外公开可见（这样别人才能用你的公钥加密数据给你）</li><li>私钥自己保存不给他人（有了私钥就能解密）</li></ol><h2 id=数据加密过程>数据加密过程</h2><p>假定A需要发送银行卡密码给B，B需要解密拿到银行卡密码明文，加密的过程：</p><ol><li>A 通过安全的方式获取 B 的公钥；（具体什么方式不限，比如 B 可以将公钥放公网）</li><li>A 用 B 的公钥加密银行卡密码，将加密后的内容传给 B；</li><li>B 使用 B 的私钥解密收到的密文，得到银行卡密码明文；
+<img src=https://github.com/isayme/blog/assets/1747852/e8fe1af5-66da-4f87-bdf6-b475e03a6aa2 alt></li></ol><h2 id=数字签名过程>数字签名过程</h2><p>假定有份商业合同需要A签字，B需要验证A签名了且合同内容没有被人篡改，签名过程？</p><ol><li>A 使用 A 的私钥对商业合同做签名；（两个作用：1. 证明是A签的；2. 防止别人看到的合同内容被篡改）</li><li>A 将合同和签名信息一起发送给 B；</li><li>B 通过安全的方式获取 A 的公钥；</li><li>B 使用 A 的公钥对收到的 签名做验证，验证通过后才认为合同内容可信；
+<img src=https://github.com/isayme/blog/assets/1747852/a5665ad4-4c2d-40e1-a94b-ba4f412d4e73 alt></li></ol><h1 id=安装-gnupg>安装 GnuPG</h1><p>GnuPG 官网：<a href=https://www.gnupg.org/>https://www.gnupg.org</a></p><h2 id=安装命令行工具>安装命令行工具</h2><h3 id=mac>Mac</h3><blockquote><p>brew install gnupg</p></blockquote><h3 id=debianubuntu>Debian/Ubuntu</h3><blockquote><p>apt install gnupg</p></blockquote><h3 id=centos>CentOS</h3><blockquote><p>yum install gnupg</p></blockquote><h2 id=安装图形界面>安装图形界面</h2><h3 id=mac-1>Mac</h3><p><a href=https://gpgtools.org/>GPG Suite</a></p><h3 id=windows>Windows</h3><p><a href=http://www.gpg4win.org/>GPG4Win</a></p><h2 id=确认完成安装>确认完成安装</h2><pre><code># gpg --version
+gpg (GnuPG) 2.2.19
+</code></pre><h1 id=常用操作>常用操作</h1><h2 id=列出已有的密钥>列出已有的密钥</h2><h3 id=列出已有的公钥>列出已有的公钥</h3><pre><code># gpg --list-keys
+------------------------
+# pub 表示这是公钥，如果是私钥，这里会是 sec
+# rsa3072, 表示这是 rsa 算法，密钥长度 3072 位
+# 2024-02-04 是公钥创建时间
+# expires 后面是公钥过期时间
+pub   rsa3072 2024-02-04 [SC][expires: 2024-11-30]
+# 这是公钥指纹，如果这个公钥来自他人，可用于和对方确认指纹，确保公钥是对方的。
+      C2763C98BB7CF126E63FD0FDF4EC5AF0F688DC85
+# 公钥uid信息
+# ultimate 表示这是个被标记可信的公钥，默认从别处导入的公钥是不可信的。
+uid           [ultimate] demo2 (demo2 comment) &lt;demo2@t.cn&gt;
+sub   rsa3072 2024-02-04 [E]
+</code></pre><p>后续会大量使用 uid，uid 可以是 name，可以是邮箱，可以是指纹，只要不重复就可以用。</p><h3 id=列出已有的私钥>列出已有的私钥</h3><blockquote><p>gpg &ndash;list-secret-keys</p></blockquote><p>输出信息和公钥差不多。</p><h2 id=新建密钥对>新建密钥对</h2><blockquote><p>gpg &ndash;full-generate-key</p></blockquote><p>命令执行会提示几个问题, 这里提供建议答案：</p><ol><li>key 类型选择 <code>RSA and RSA</code>(即默认值）；</li><li>key 长度选择 4096；</li><li>key 有限期选择永久；(根据你的需要选择</li></ol><p>生成过程中会提示为私钥设置密码，如果密钥不需要可以直接Ok跳过(会提示两次)。</p><h2 id=创建撤销公钥证书>创建撤销公钥证书</h2><p>一旦私钥泄露，需要及时标记公钥作废。
+<a href=https://superuser.com/questions/1526283/how-to-revoke-a-gpg-key-and-upload-in-gpg-server>https://superuser.com/questions/1526283/how-to-revoke-a-gpg-key-and-upload-in-gpg-server</a></p><pre><code># 创建一个撤销证书
+gpg --output revoke.asc --revoke-key [uid]
+
+# 标记本地公钥为撤销
+gpg --import revoke.asc
+
+# 标记密钥服务器上的公钥为撤销（再上传一次公钥）
+gpg --send-keys [uid]
+</code></pre><h2 id=导出公钥或私钥>导出公钥或私钥</h2><p>将你的公钥导出给他人使用。</p><pre><code># --armor 表示到处公钥为 ascii 格式
+# --output 指定导出文件路径
+gpg --armor --output ./public-key.txt --export [uid]
+
+# 导出私钥
+gpg --armor --output private-key.txt --export-secret-keys [uid]
+</code></pre><h2 id=导入公钥并标记可信>导入公钥并标记可信</h2><pre><code># --import 指定导入公钥所在文件
+gpg --import ./public-key.txt
+</code></pre><p>导入的公钥默认是不受信的，后续使用此公钥时软件会提醒，</p><pre><code># [uid] 导入公钥的 uid
+gpg --sign-key [uid]
+</code></pre><h2 id=删除公钥或私钥>删除公钥或私钥</h2><pre><code># 删除公钥
+gpg --delete-keys [uid]
+
+# 删除私钥
+gpg --delete-secret-keys [uid]
+</code></pre><h2 id=将公钥托管在密钥服务器>将公钥托管在密钥服务器</h2><p>公钥除了通过文本或文件传输，还可以将其上传到密钥服务器，这样其他人可以在密钥服务器上直接下载你的公钥。</p><pre><code># 上传公钥
+gpg --send-keys [uid]
+
+# 搜索公钥
+gpg --search-keys [uid]
+
+# 下载公钥
+gpg --receive-keys [uid]
+</code></pre><p>默认的密钥服务是 <code>keys.gnupg.net</code>, 可通过参数<code>--keyserver [key server url]</code>指定密钥服务器。
+常见的密钥服务器有（<a href=http://en.wikipedia.org/wiki/Key_server_(cryptographic)>维基</a>）：</p><ul><li><a href=https://keyserver.ubuntu.com>https://keyserver.ubuntu.com</a></li><li><a href=https://pgp.mit.edu>https://pgp.mit.edu</a></li><li><a href=https://keyring.debian.org>https://keyring.debian.org</a></li></ul><h1 id=使用gpg实现数据加密>使用gpg实现数据加密</h1><pre><code># 加密文件, --recipient 指定使用uid的公钥
+gpg --output demo.enc.txt --recipient [uid] --encrypy demo.txt
+
+# 解密文件, 无需指定密钥，密文里含有此密文使用的公钥信息。
+gpg --output demo.de.txt --decrypt demo.enc.txt
+</code></pre><h1 id=使用gpg实现数字签名>使用gpg实现数字签名</h1><pre><code># 可通过 --output 参数指定输出前面文件位置
+
+# 签名，会在当前目录生成 demo.txt.gpg 文件，文件是二进制，含有原始文件内容和签名信息
+gpg --sign demo.txt
+# 签名，会在当前目录生成 demo.txt.asc 文件，文件是文本，含有原始文件内容和签名信息
+gpg --clearsign demo.txt
+# 签名，会在当前目录生成 demo.txt.sig 文件，文件是二进制，仅含有签名信息
+gpg --detach-sign demo.txt
+# 签名，会在当前目录生成 demo.txt.sig 文件，文件是文本，仅含有签名信息
+gpg --armor --detach-sign demo.txt
+</code></pre><pre><code># 验证通过软件会给出提示
+gpg --verify demo.txt.gpg
+gpg --verify demo.txt.asc
+gpg --verify demo.txt.sig
+</code></pre><h1 id=参考信息>参考信息</h1><ul><li><a href=https://www.ruanyifeng.com/blog/2013/07/gpg.html>阮一峰: GPG入门教程</a></li><li><a href=https://www.williamlong.info/archives/3439.html>使用GnuPG(PGP)加密信息及数字签名教程</a></li></ul></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

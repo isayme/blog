@@ -1,0 +1,25 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>编码风格: EditorConfig, Prettier, ESLint, VS Code 配置</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="编码风格: EditorConfig, Prettier, ESLint, VS Code 配置"><meta name=twitter:description content="目标风格  文件使用 utf-8 编码; 缩进优先使用2空格(space); 使用 lf 作为换行符; 行尾不留空格; 文件尾空一行; 保存文件时自动格式化(format); 先使用 Prettier 格式化, 再使用 ESLint 格式化; 支持在 Prettier 基础之上自定义 ESLint 与 Prettier 冲突的规则;  EditorConfig 配置  相关目标: 1, 2, 3, 4, 5"><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>编码风格: EditorConfig, Prettier, ESLint, VS Code 配置</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h1 id=目标风格>目标风格</h1><ol><li>文件使用 <code>utf-8</code> 编码;</li><li>缩进优先使用2空格(space);</li><li>使用 <code>lf</code> 作为换行符;</li><li>行尾不留空格;</li><li>文件尾空一行;</li><li>保存文件时自动格式化(format);</li><li>先使用 Prettier 格式化, 再使用 ESLint 格式化;</li><li>支持在 Prettier 基础之上自定义 ESLint 与 Prettier 冲突的规则;</li></ol><h1 id=editorconfig-配置>EditorConfig 配置</h1><blockquote><p>相关目标: <code>1, 2, 3, 4, 5</code></p></blockquote><p>见 <a href=https://github.com/isayme/editorconfig/blob/master/.editorconfig>https://github.com/isayme/editorconfig/blob/master/.editorconfig</a></p><h1 id=prettier-配置>Prettier 配置</h1><blockquote><p>相关目标: <code>2, 3, 4, 5</code></p></blockquote><p>见 <a href=http://github.com/isayme/prettier-config>http://github.com/isayme/prettier-config</a>
+使用方法: 在 Prettier 的配置文件中直接填"@isayme/prettier-config", 注意其中使用的是双引号.</p><h1 id=eslint-配置>ESLint 配置</h1><blockquote><p>相关目标: <code>7, 8</code></p></blockquote><p>见: <a href=https://github.com/isayme/eslint-config>https://github.com/isayme/eslint-config</a>
+ESLint 配置需要根据实际场景, 基础配置是:</p><pre><code>extends: ['prettier']
+</code></pre><h1 id=vs-code-配置>VS Code 配置</h1><blockquote><p>相关目标: <code>6, 7, 8</code></p></blockquote><pre><code>// setting.json 配置
+&quot;editor.formatOnSave&quot;: false,
+&quot;editor.codeActionsOnSave&quot;: [
+    &quot;source.fixAll.format&quot;,
+    &quot;source.fixAll.eslint&quot;
+  ]
+</code></pre><p>如果发现没有自动格式化, 试试加上配置:</p><pre><code>&quot;eslint.validate&quot;: [
+    &quot;javascript&quot;,
+    &quot;javascriptreact&quot;,
+    &quot;typescript&quot;,
+    &quot;typescriptreact&quot;
+  ]
+</code></pre><p>需要安装 VS Code 插件: <a href="https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig">EditorConfig</a>, <a href="https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode">Prettier</a>, <a href="https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint">ESLint</a>, <a href="https://marketplace.visualstudio.com/items?itemName=rohit-gohri.format-code-action">Format Code Action</a>.</p></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

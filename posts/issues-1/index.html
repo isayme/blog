@@ -1,0 +1,42 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>Dockerfile 最佳实践 - for Node.js</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="Dockerfile 最佳实践 - for Node.js"><meta name=twitter:description content="使用 alpine 版本的基础镜像 # 明确指定版本号, 如: node:6."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>Dockerfile 最佳实践 - for Node.js</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h2 id=使用-alpine-版本的基础镜像>使用 alpine 版本的基础镜像</h2><pre><code># 明确指定版本号, 如: node:6.12.0-alpine
+# 生产环境避免使用 latest 的 tag
+FROM node:alpine
+</code></pre><p><img src=https://user-images.githubusercontent.com/1747852/33382140-e018e684-d55a-11e7-8742-c225fa150548.png alt=image></p><p>alpine 版本的镜像在磁盘占用上存在极大的优势.
+BTW: node 的镜像已经包含了 <a href>yarn</a>, 无需额外单独安装.</p><h2 id=使用-dockerignorehttpsdocsdockercomenginereferencebuilderdockerignore-file-文件>使用 <a href=https://docs.docker.com/engine/reference/builder/#dockerignore-file>.dockerignore</a> 文件</h2><p>通过此文件配置忽略无意义的文件, 在 build 镜像时减小 <a href=https://docs.docker.com/engine/reference/commandline/build/#extended-description>context</a> 体积.</p><pre><code># 在镜像中安装, 而不是复制本地安装的版本, 避免兼容问题(有些依赖需要编译过程, 与平台有关)
+node_modules
+# git 版本产生的数据, 与服务本身无关
+.git
+# 测试代码, 生成镜像时可以忽略
+test
+</code></pre><h2 id=注意顺序>注意顺序</h2><pre><code># 先单独复制 package.json 并安装依赖, 然后再复制其他文件
+COPY package.json /app
+RUN [&quot;npm&quot;, &quot;install&quot;, &quot;--production&quot;]
+
+COPY . /app
+</code></pre><p>与</p><pre><code># 直接复制 app 文件, 随后安装依赖.
+COPY . /app
+RUN [&quot;npm&quot;, &quot;install&quot;, &quot;--production&quot;]
+</code></pre><p>两种方式的结果是一样的.
+但 docker 在产生镜像时会使用 <a href=https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/#build-cache>cache</a> 特性. 如果频繁修改代码后 build 新的镜像, 则 <code>COPY . /app</code> 及之后的 Dockerfile 语句都需要重新执行, 此时前者的优势是: <strong>无需重复耗时安装依赖</strong>.</p><h2 id=使用-pm2>使用 PM2</h2><p>PM2 官方指导: <a href=http://pm2.keymetrics.io/docs/usage/docker-pm2-nodejs/>Docker Integration</a>
+官方提供了包含 PM2 的镜像: <a href=https://hub.docker.com/r/keymetrics/pm2/>keymetrics/pm2</a>
+个人不推荐使用官方版本, 当前官方的版本会将<code>/app</code>作为数据卷挂载到镜像:
+<a href=https://github.com/keymetrics/docker-pm2/blob/e8ddd44691ba1259541c420421fbaa7a6e1f44ed/6/Dockerfile#L6>https://github.com/keymetrics/docker-pm2/blob/e8ddd44691ba1259541c420421fbaa7a6e1f44ed/6/Dockerfile#L6</a></p><h2 id=清理无意义的数据>清理无意义的数据</h2><p><strong>推荐使用 <a href=https://docs.docker.com/engine/userguide/eng-image/multistage-build/>multistage build</a></strong></p><p>通过<code>apt-get</code>/<code>yum</code>安装工具后立即清理产生的临时文件, 以降低该层占用的镜像大小, 如:</p><pre><code>RUN apt-get install -y git &amp;&amp; apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/*
+RUN yum install git-core &amp;&amp; yum clean all
+</code></pre><p>如果使用 <code>npm</code> 管理依赖, 需要在安装后使用<code>npm cache clean</code>清理缓存以降低镜像大小. 示例:</p><pre><code>COPY package*.json ./
+RUN npm install --production &amp;&amp; npm cache clean
+</code></pre><p>如果使用 <a href=https://yarnpkg.com/en/>yarn</a> 管理依赖, 需要在安装后使用<code>yarn cache clean</code>清理缓存以降低镜像大小. 示例:</p><pre><code>COPY package*.json yarn.lock ./
+RUN yarn install --production &amp;&amp; yarn cache clean
+</code></pre><h2 id=使用-multi-stage-特性>使用 multi-stage 特性</h2><p>使用 <a href=https://docs.docker.com/engine/userguide/eng-image/multistage-build/>multi-stage</a> 特性, 利用中间层安装好依赖, 将结果复制到最终的镜像, 达到减小镜像的目的.</p><h2 id=示例-dockerfile>示例 Dockerfile</h2><p>npm 版本: <a href=https://github.com/isayme/blog/blob/master/issues/1/Dockerfile-npm>https://github.com/isayme/blog/blob/master/issues/1/Dockerfile-npm</a>
+yarn 版本: <a href=https://github.com/isayme/blog/blob/master/issues/1/Dockerfile-yarn>https://github.com/isayme/blog/blob/master/issues/1/Dockerfile-yarn</a>
+pm2 版本: <a href=https://github.com/isayme/blog/blob/master/issues/1/Dockerfile-pm2>https://github.com/isayme/blog/blob/master/issues/1/Dockerfile-pm2</a>
+multistage 版本: <a href=https://github.com/isayme/blog/blob/master/issues/1/Dockerfile-multistage>https://github.com/isayme/blog/blob/master/issues/1/Dockerfile-multistage</a></p><h3 id=参考文献>参考文献</h3><ul><li><a href=https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/>Best practices for writing Dockerfiles</a></li><li><a href=http://blog.container-labs.com/dockerfile-10-good-practices/>Dockerfile: 10 good practices</a></li><li><a href=https://hackernoon.com/tips-to-reduce-docker-image-sizes-876095da3b34>Tips to Reduce Docker Image Sizes</a></li><li><a href=https://www.fromlatest.io/>Dockerfile linter</a></li><li><a href=https://docs.docker.com/engine/userguide/eng-image/multistage-build/>Use multi-stage builds</a></li></ul><div class=blog-tags><a href=https://blog.isayme.org/tags/dockerfile/>Dockerfile</a>&nbsp;
+<a href=https://blog.isayme.org/tags/docker/>docker</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

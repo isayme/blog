@@ -1,0 +1,40 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>Linux 账号密码加密方式 (Node.js 实现 sha-512 加密算法)</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="Linux 账号密码加密方式 (Node.js 实现 sha-512 加密算法)"><meta name=twitter:description content="基础信息 linux 账号密码加密存储在文件/etc/shadow中; /etc/shadow 文件每一行记录一个账号的相关信息, 其中用户密码采用加密(支持多种算法)方式存储;"><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>Linux 账号密码加密方式 (Node.js 实现 sha-512 加密算法)</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h1 id=基础信息>基础信息</h1><p>linux 账号密码加密存储在文件<code>/etc/shadow</code>中;
+<code>/etc/shadow</code> 文件每一行记录一个账号的相关信息, 其中用户密码采用加密(支持多种算法)方式存储;</p><h1 id=etcshadow-格式><code>/etc/shadow</code> 格式</h1><pre><code># cat /etc/shadow
+# root:$6$PCjFvrAA/NnyKdMp$7fs0mn0nUuQ0jjtKZVAyf8TCBIx5MUvwC2ftkRwh2q7PYSuKpnv4wVu63zX.oCJ/RG2v4gDbNMCDAV1dIjCuE.:18631:0:::::
+</code></pre><p><a href=https://linuxize.com/post/etc-shadow-file/>https://linuxize.com/post/etc-shadow-file/</a></p><pre><code>mark:$6$.n.:17736:0:99999:7:::
+[--] [----] [---] - [---] ----
+|      |      |   |   |   |||+-----------&gt; 9. Unused
+|      |      |   |   |   ||+------------&gt; 8. Expiration date
+|      |      |   |   |   |+-------------&gt; 7. Inactivity period
+|      |      |   |   |   +--------------&gt; 6. Warning period
+|      |      |   |   +------------------&gt; 5. Maximum password age
+|      |      |   +----------------------&gt; 4. Minimum password age
+|      |      +--------------------------&gt; 3. Last password change
+|      +---------------------------------&gt; 2. Encrypted Password
++----------------------------------------&gt; 1. Username
+
+</code></pre><h1 id=encrypted-password的格式><code>Encrypted Password</code>的格式</h1><pre><code>$id$salt$hashed
+</code></pre><p>其中 id 表示加密策略, 可能值有:</p><p><a href=https://www.cyberciti.biz/faq/understanding-etcshadow-file/>https://www.cyberciti.biz/faq/understanding-etcshadow-file/</a></p><p><a href=https://en.wikipedia.org/wiki/Crypt_(C)>https://en.wikipedia.org/wiki/Crypt_(C)</a></p><pre><code>1: MD5(Linux, BSD)
+2a: Blowfish (OpenBSD)
+md5: Sun MD5
+5: sha-256
+6: sha-512
+</code></pre><h1 id=一个示例>一个示例</h1><pre><code>root:$6$PCjFvrAA/NnyKdMp$7fs0mn0nUuQ0jjtKZVAyf8TCBIx5MUvwC2ftkRwh2q7PYSuKpnv4wVu63zX.oCJ/RG2v4gDbNMCDAV1dIjCuE.:18631:0:::::
+
+// 原始 password: 123456
+// salt = 'PCjFvrAA/NnyKdMp', 最多16字节
+// encrypt password = '7fs0mn0nUuQ0jjtKZVAyf8TCBIx5MUvwC2ftkRwh2q7PYSuKpnv4wVu63zX.oCJ/RG2v4gDbNMCDAV1dIjCuE.' 共86字节,
+</code></pre><h2 id=openssl-加密命令>openssl 加密命令</h2><p>示例密码是<code>sha512</code>加密策略, 可以使用 openssl (Ubuntu 18.04 安装 openssl, 14.04 不支持 <code>-6</code> 参数) 加密验证结果是否一致:</p><pre><code>openssl passwd -6 -salt PCjFvrAA/NnyKdMp 123456
+$6$PCjFvrAA/NnyKdMp$7fs0mn0nUuQ0jjtKZVAyf8TCBIx5MUvwC2ftkRwh2q7PYSuKpnv4wVu63zX.oCJ/RG2v4gDbNMCDAV1dIjCuE.
+</code></pre><h1 id=加密算法-sha-512-nodejs-实现>加密算法 sha-512 Node.js 实现</h1><p>加密算法说明: <a href=https://akkadia.org/drepper/SHA-crypt.txt>https://akkadia.org/drepper/SHA-crypt.txt</a>
+<code>encrypt password</code> 使用<a href=https://en.wikipedia.org/wiki/Base64>类 base64 编码</a>.</p><p>为了真实体验加密过程, 这里使用 nodejs 实现了一遍:
+<a href=https://gist.github.com/isayme/44a82a15dc49c356743c95223cb7166a>https://gist.github.com/isayme/44a82a15dc49c356743c95223cb7166a</a></p></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

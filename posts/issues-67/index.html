@@ -1,0 +1,71 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>NodeJS 模块系统备忘：CommonJS & ESM</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="NodeJS 模块系统备忘：CommonJS & ESM"><meta name=twitter:description content="本文记录了一些 ESM 使用 以及 ESM 和 CommonJS 互相引用的知识点，假定你对 CommonJS 和 ESM 有一定的了解。 你也可以参考 阮一峰: ESM Module 的语法 和 阮一峰: ESM Module 的加载实现 获取更多信息。"><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>NodeJS 模块系统备忘：CommonJS & ESM</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><blockquote><p>本文记录了一些 <code>ESM 使用</code> 以及 <code>ESM 和 CommonJS 互相引用</code>的知识点，假定你对 CommonJS 和 ESM 有一定的了解。
+你也可以参考 <a href=https://es6.ruanyifeng.com/#docs/module>阮一峰: ESM Module 的语法</a> 和 <a href=https://es6.ruanyifeng.com/#docs/module-loader>阮一峰: ESM Module 的加载实现</a> 获取更多信息。</p></blockquote><p>较新的 NodeJS 版本(>=13.2.0)可以加载 CommonJS 和 ESM，用户需指明具体某些文件是什么模块类型。可以简单参考如下：</p><p><img src=https://github.com/isayme/blog/assets/1747852/e416400e-f7bf-4c87-bf8d-324a0d36e0d6 alt=image></p><h1 id=esm-import-常用场景>ESM import 常用场景</h1><p>一图胜千言:</p><p><img src=https://github.com/isayme/blog/assets/1747852/f686ae53-8116-47bf-be6f-812a1d7d3cb1 alt=image></p><h2 id=import--add--from-modulea>import { add } from &lsquo;moduleA&rsquo;</h2><p>此时 add 是 <code>moduleA</code> 导出的函数 <code>add</code>。</p><pre><code>// moduleA.mjs
+export function add(a, b) {
+  return a + b
+}
+</code></pre><h2 id=import-modulea-from-modulea>import moduleA from &lsquo;moduleA&rsquo;</h2><p>此时 moduleA 是 <code>moduleA</code> 导出的 <code>default</code>, 等价于<code>import { default as moduleA } from 'moduleA'</code></p><pre><code>// moduleA.mjs
+export default {
+  add: function(a, b) {
+    return a + b
+  }
+}
+</code></pre><h2 id=import--as-modulea-from-modulea>import * as moduleA from &lsquo;moduleA&rsquo;</h2><p>此时 moduleA 对应模块 <code>moduleA</code> 中的 <code>namespace object</code>, 可简单理解为所有导出的变量，包括<code>default</code>。</p><pre><code>// moduleA.mjs
+export function add(a, b) {
+  return a + b
+}
+export default function add(a, b) {
+  return a + b
+}
+</code></pre><h1 id=模块类型混乱引发的异常>模块类型混乱引发的异常</h1><h2 id=如果-packagejson-中-type--commonjs尝试运行-esm-文件会报错>如果 package.json 中 type = commonjs，尝试运行 ESM 文件，会报错</h2><p><img src=https://github.com/isayme/blog/assets/1747852/e1dbad9f-0696-44af-bbf1-e6864a82ea98 alt=image></p><p><img src=https://github.com/isayme/blog/assets/1747852/ab61c3b6-a49e-4b5b-9277-8cf415912260 alt=image></p><h2 id=如果-packagejson-中-type--moudle尝试运行-commonjs-文件会报错>如果 package.json 中 type = moudle，尝试运行 CommonJS 文件，会报错</h2><p><img src=https://github.com/isayme/blog/assets/1747852/37c6e33a-a57b-406c-91ef-ba8f798ac6ee alt=image></p><p><img src=https://github.com/isayme/blog/assets/1747852/92cddccc-369c-44a6-a8e3-21bed1bf6367 alt=image></p><h1 id=commonjs-文件中引用-esm-模块>CommonJS 文件中引用 ESM 模块</h1><p>使用场景较少，此处不谈论。</p><h1 id=esm-文件中引用-commonjs-模块>ESM 文件中引用 CommonJS 模块</h1><pre><code>// tool.cjs
+function add(a, b) {
+  return a + b
+}
+
+exports.add = add
+</code></pre><pre><code>// test.mjs
+
+// 三种方式都可以
+import { add } from './tool.cjs'
+import Tool1 from './tool.cjs'
+import * as Tool2 from './tool.cjs'
+
+console.log(add(1, 2))
+console.log(Tool1.add(1, 2))
+console.log(Tool2.add(1, 2))
+</code></pre><p>ESM 引用 CommonJS 模块时，等价于 export CommonJS 中 exports，同时 export default CommonJS 中 exports。所以 <code>tool.cjs</code> 可以等价于</p><pre><code>// tool.mjs
+function add(a, b) {
+  return a + b
+}
+
+export { add }
+export default { add }
+</code></pre><h1 id=一些模块已不再支持-commonjs>一些模块已不再支持 CommonJS</h1><p>如 <a href=https://www.npmjs.com/package/chalk>chalk</a> 在 <code>5.x</code> 版本中完全使用 ESM 语法，不再支持 CommonJS。</p><p><img src=https://github.com/isayme/blog/assets/1747852/5dc70e2b-c30c-41e6-beb2-1324e236005f alt=image>
+其中背景可参见 <a href=https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c#pure-esm-package>Pure ESM package</a> 。</p><p>如果你的代码还在使用 CommonJS，对于此类模块，只好使用旧版本。</p><h1 id=做一个同时支持-commonjs-和-esm-的模块>做一个同时支持 CommonJS 和 ESM 的模块</h1><p>技术上可以让一个模块同时兼容 CommonJS 和 ESM。官方参考文档：https://nodejs.org/api/packages.html#package-entry-points
+方法是在模块中同时有 CommonJS 和 ESM 代码(加入分别在 cjs 和 mjs 子目录)，在 package.json 中指明两者的入口文件。</p><pre><code>// package.json
+{
+  &quot;main&quot;: &quot;./cjs/index.js&quot;,
+  &quot;module&quot;: &quot;./mjs/index.js&quot;,
+  &quot;exports&quot;: {
+    &quot;require&quot;: &quot;./cjs/index.js&quot;,
+    &quot;import&quot;: &quot;./mjs/index.js&quot;
+  }
+}
+</code></pre><p>其中的 &ldquo;exports&rdquo; 是简写，等价于</p><pre><code>// package.json
+{
+  &quot;exports&quot;: {
+    &quot;.&quot;: {
+      &quot;require&quot;: &quot;./cjs/index.js&quot;,
+      &quot;import&quot;: &quot;./mjs/index.js&quot;
+    }
+  }
+}
+</code></pre></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

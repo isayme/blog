@@ -1,0 +1,16 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>xlan: Golang 实现一个内网穿透工具</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="xlan: Golang 实现一个内网穿透工具"><meta name=twitter:description content="目标 通过因特网(Internet)访问局域网(LAN)中的服务."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>xlan: Golang 实现一个内网穿透工具</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h1 id=目标>目标</h1><p>通过因特网(Internet)访问局域网(LAN)中的服务.</p><h1 id=限制条件>限制条件</h1><p>内网本身无因特网IP, 无法通过局域网路由器的端口转发功能转发请求.</p><h1 id=解决方案>解决方案</h1><p>方案为<code>内网穿透</code>, 目前有开源产品 <a href=https://github.com/fatedier/frp>frp</a>.
+本文实现的工具取名 <a href=https://github.com/isayme/go-xlan>xlan</a>, 服务端, 客户端分别称为 <code>xlans</code> 和 <code>xlanc</code></p><h1 id=设计>设计</h1><p>完整通信链路由 4 部分组成: 用户(user), 内网穿透服务端(xlans), 内网穿透客户端(xlanc), 最终服务(service), 其中 <code>xlans</code> 有公网 IP 地址.</p><p><code>总体思路</code>: <code>user</code> 无法直接访问 <code>service</code>, 但是可以访问 <code>xlans</code>, <code>xlans</code> 将用户的请求转交给 <code>xlanc</code>, 由 <code>xlanc</code> 代为访问 <code>service</code>.</p><h1 id=关键链路>关键链路</h1><p><img src=https://user-images.githubusercontent.com/1747852/94570219-33fad980-02a1-11eb-8ee0-a088caa27dc5.png alt=image></p><p>第1步: xlanc 启动时与 xlans 建立<code>控制连接</code>, 注册 service 信息, 接收来自 xlans 的指令;
+第2步: user 向 xlans 发起请求, 建立连接 A;
+第3步: xlans 向 xlanc 发起指令, 告知有 user 请求 service;
+第4步: xlanc 向 xlans 建立<code>数据连接</code> B;
+第5步: xlanc 向 service 建立连接 C;
+最后: xlans 将连接 A 和 B 的数据进行交换, xlanc 将连接 B 和 C 的数据进行交换, 达到 user 和 service 通信的目的.</p><div class=blog-tags><a href=https://blog.isayme.org/tags/golang/>golang</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

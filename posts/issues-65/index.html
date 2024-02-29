@@ -1,0 +1,38 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>N1 通过 Docker 安装 Openwrt 为旁路由</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="N1 通过 Docker 安装 Openwrt 为旁路由"><meta name=twitter:description content="说明 我的网络情况:"><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>N1 通过 Docker 安装 Openwrt 为旁路由</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h1 id=说明>说明</h1><p>我的网络情况:</p><ol><li>主路由 IP 是 <code>192.168.4.1</code>;</li><li>N1 Armbian IP 是 <code>192.168.4.2</code>;</li><li>Openwrt IP 是 <code>192.168.4.11</code>.</li></ol><h1 id=openwrt-安装及配置>Openwrt 安装及配置</h1><h2 id=1-开启网卡混杂模式>1. 开启网卡混杂模式</h2><pre><code>## 启用
+ip link set eth0 promisc on
+</code></pre><h2 id=2-docker-创建-macvlan-网络>2. docker 创建 macvlan 网络</h2><pre><code>docker network create -d macvlan --subnet=192.168.4.0/24 --gateway=192.168.4.1 -o parent=eth0 macnet
+</code></pre><h2 id=3-启动-openwrt-镜像>3. 启动 openwrt 镜像</h2><pre><code># for N1
+docker run \
+  -d \
+  --name=unifreq-openwrt-aarch64 \
+  --restart=unless-stopped \
+  --network=macnet \
+  --privileged \
+  --ip=192.168.4.11 \
+  unifreq/openwrt-aarch64:r21.11.11
+</code></pre><h2 id=4-修改容器-ip-信息并重启容器>4. 修改容器 IP 信息并重启容器</h2><pre><code># 见 Docker 镜像说明: https://hub.docker.com/r/unifreq/openwrt-aarch64
+docker exec unifreq-openwrt-aarch64 sed -e &quot;s/192.168.1.1/192.168.4.11/&quot; -i /etc/config/network
+docker restart unifreq-openwrt-aarch64
+</code></pre><h2 id=5-http192168411-访问-openwrt>5. http://192.168.4.11 访问 openwrt</h2><p>默认账号密码: <code>root/password</code></p><h2 id=6-关闭-dhcp>6. 关闭 DHCP</h2><p>路径: 网络 => 接口 => LAN => DHCP 服务器 => 基本设置
+操作: 勾选忽略此接口
+<img src=https://user-images.githubusercontent.com/1747852/144264205-4ef70e4f-6856-444c-acb0-0ad4cb8fd43f.png alt=image></p><h2 id=7-关闭-ipv6>7. 关闭 IPv6</h2><p>路径: 网络 => 接口 => LAN => DHCP 服务器 => IPv6 设置
+操作: 禁用 <code>路由通告服务</code>, <code>DHCPv6 服务</code>, <code>NDP 代理</code>
+<img src=https://user-images.githubusercontent.com/1747852/144264234-5393daf5-02b9-41d0-92b8-c8db06dcbde2.png alt=image></p><h2 id=8-配置-网关-和-dns>8. 配置 网关 和 DNS</h2><p>路径: 网络 => 接口 => LAN => 一般设置 => 基本设置
+操作: 1. <code>IPv4 网关</code> 改为 <code>192.168.4.1</code>; 2. <code>IPv4 广播</code> 改为 <code>192.168.1.255</code>; 3. <code>使用自定义的 DNS 服务器</code> 改为 <code>114.114.114.114</code>
+<img src=https://user-images.githubusercontent.com/1747852/144266331-6ebd76d9-be64-485c-8f96-a42ce909319d.png alt=image></p><h2 id=9-主路由系统是-padavan-需要的配置>9. 主路由系统是 <code>Padavan</code> 需要的配置</h2><p>将 <code>IPv4 硬件加速</code> 改为 <code>Offload TCP/UDP for LAN</code>.
+<img src=https://user-images.githubusercontent.com/1747852/144273414-1e0557bb-7c0d-4022-bf5c-3b3e9eef3d3d.png alt=image></p><h2 id=10-宿主机与openwrt互通-宿主机访问外网>10. 宿主机与Openwrt互通, 宿主机访问外网</h2><p>目前宿主机无法访问 Openwrt 以及外网, 需要的配置: 在 /etc/rc.local 中增加初始化逻辑:</p><pre><code>ip link add mynet link eth0 type macvlan mode bridge 
+ip addr add 192.168.4.2 dev mynet
+ip link set mynet up
+ip route add 192.168.4.11 dev mynet
+</code></pre><h2 id=11-配置主路由>11. 配置主路由</h2><p>目前主路由下的设备可以在网络设置中将路由器的地址改为<code>192.168.4.11</code>即可实现通过旁路由上网.
+为了避免各个设备分别配置, 达到全局使用旁路由的目的, 可以配置主路由: 将 DHCP 默认网关 和 DNS 都改为 <code>192.168.4.11</code>
+<img src=https://user-images.githubusercontent.com/1747852/144265148-ae38c859-3c2d-41f7-b53f-24949d54fe88.png alt=image></p><h1 id=资料>资料</h1><ul><li>主要参考文章 <a href=https://touchren.pub/2020/11/16/openwrt-in-docker/>Docker下安装/升级Openwrt</a></li><li><a href=https://www.right.com.cn/forum/thread-1048535-1-1.html>N1盒子 docker openwrt 踩坑的几个小问题解决过程分享</a></li><li><a href=https://mlapp.cn/376.html>在Docker 中运行 OpenWrt 旁路网关</a></li><li><a href=https://www.treesir.pub/post/n1-docker/>Docker 部署的 openWrt 软路由, 并解决无法与宿主机通信问题</a></li><li><a href=https://www.otakusay.com/874.html>Armbian Docker Openwrt 旁路由详细设置教程</a></li><li><a href=https://www.right.com.cn/forum/thread-958173-1-1.html>N1 openwrt 镜像信息</a></li></ul></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

@@ -1,0 +1,24 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>Koa/Express 定义含有冒号(:)的路由</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="Koa/Express 定义含有冒号(:)的路由"><meta name=twitter:description content="在 Koa/Express 等 Node Web 框架中, 可以通过冒号(:)定义路由参数."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>Koa/Express 定义含有冒号(:)的路由</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><p>在 Koa/Express 等 Node Web 框架中, 可以通过冒号(:)定义路由参数.</p><pre><code>// GET /users/123/books/456
+
+//Express
+app.get('/users/:userId/books/:bookId', function (req, res) {
+  res.send(req.params) // =&gt; { userId: '123', bookId: '456' }
+})
+
+// Koa
+router.get('/users/:userId/books/:bookId', (ctx, next) =&gt; {
+  console.log(ctx.params); // =&gt; { userId: '123', bookId: '456' }
+})
+</code></pre><p>Google 的 <a href=https://cloud.google.com/apis/design/custom_methods>Restful API 指导</a> 中, 通过 <code>冒号+动词</code> 描述无法通过 HTTP method 表达的接口. 如: <code>POST /files/a/long/file/name:undelete</code>.</p><p>由此引出问题: Koa/Express 如何定义含有冒号(:)的路由 ?</p><p>Koa/Express 背后都是使用的 <a href=https://github.com/pillarjs/path-to-regexp>Path-to-RegExp</a>. <code>path-to-regexp>=0.2</code> 版本支持通过转义达到效果.</p><p>目前 Express 使用的是<code>0.1.7</code>版本, 暂不支持. 官方计划在 Express 5 版本升级 <code>path-to-regexp</code> 版本: <a href=https://github.com/expressjs/express/issues/3419>#3419</a> <a href=https://github.com/expressjs/express/pull/3409>#3409</a> <a href=https://github.com/expressjs/express/issues/3142>#3142</a> <a href=https://github.com/expressjs/express/pull/2530>#2530</a>.</p><p><a href=https://github.com/alexmingoia/koa-router>Koa-Router</a> 使用的是<code>^1.1.1</code> 版本, 可以正常支持. 示例代码:</p><pre><code>router.post('/tasks/:_id\\:undelete', (ctx, next) =&gt; {
+	console.log(ctx.params)
+}
+</code></pre><h2 id=参考资料>参考资料</h2><ul><li><a href=https://expressjs.com/en/guide/routing.html>Express routing</a></li><li><a href=https://github.com/alexmingoia/koa-router#url-parameters>Koa-Router URL parameters</a></li><li><a href=https://cloud.google.com/apis/design/custom_methods>Custom Methods | Cloud APIs</a></li></ul><div class=blog-tags><a href=https://blog.isayme.org/tags/node.js/>Node.js</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

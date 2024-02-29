@@ -1,0 +1,48 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>Golang: mgo SetBSON/GetBSON 自定义数据库存储</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="Golang: mgo SetBSON/GetBSON 自定义数据库存储"><meta name=twitter:description content="Go 语言本身是强类型, 这不利于处理联合体(union)."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>Golang: mgo SetBSON/GetBSON 自定义数据库存储</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><p>Go 语言本身是强类型, 这不利于处理联合体(union).</p><p>在使用 mgo 的过程中, 经常会遇到类似的场景: <code>某个字段的值可能是类型A, 也可能是类型B.</code></p><p>为了达到上述的目的, 需要自定义 <code>bson.Marshal</code> & <code>bson.Unmarsahl</code> 方法: 实现 <code>bson.Getter</code> & <code>bson.Setter</code> interface</p><p>完整的示例的代码: <a href=https://play.golang.org/p/ESDlrW353is>https://play.golang.org/p/ESDlrW353is</a></p><h2 id=自定义-bsonmarshal--bsonunmarshal>自定义 bson.Marshal & bson.Unmarshal</h2><pre><code>// 示例结构体
+type T struct {
+	ID   string
+	Elem Elem
+}
+</code></pre><p>需求: 存储 T 类型字段到 mongo 时, 如果 <code>ID</code> 字段有值, 则存入 <code>ID</code>, 否则存入 <code>Elem</code> 字段.</p><h3 id=bsonmarshal-getbson>bson.Marshal: GetBSON</h3><p>实现 <code>bson.Getter</code> interface, 自定义字段序列化.</p><pre><code>// GetBSON bson marshal
+func (t T) GetBSON() (interface{}, error) {
+	if t.ID != &quot;&quot; {
+		return t.ID, nil
+	} else {
+		return t.Elem, nil
+	}
+}
+</code></pre><h3 id=bsonunmarshal-setbson>bson.Unmarshal: SetBSON</h3><p>实现 <code>bson.Setter</code> interface, 自定义字段反序列化.</p><pre><code>// SetBSON bson unmarshal
+func (t *T) SetBSON(raw bson.Raw) error {
+	if err := raw.Unmarshal(&amp;t.Elem); err == nil {
+		return nil
+	}
+
+	return raw.Unmarshal(&amp;t.ID)
+}
+</code></pre><h2 id=自定义-jsonmarshal--jsonunmarshal>自定义 json.Marshal & json.Unmarshal</h2><p>结构体 json 序列化后等价于序列化其中一种有效字段.</p><h3 id=jsonmarshal-marshaljson>json.Marshal: MarshalJSON</h3><pre><code>// MarshalJSON custom json.Unmarshal
+func (t T) MarshalJSON() ([]byte, error) {
+	if t.ID != &quot;&quot; {
+		return json.Marshal(t.ID)
+	} else {
+		return json.Marshal(t.Elem)
+	}
+}
+</code></pre><h3 id=jsonunmarshal-unmarshaljson>json.Unmarshal: UnmarshalJSON</h3><pre><code>// UnmarshalJSON custom json.Marshal
+func (t *T) UnmarshalJSON(data []byte) error {
+	if data[0] == '&quot;' {
+		return json.Unmarshal(data, &amp;t.ID)
+	} else {
+		return json.Unmarshal(data, &amp;t.Elem)
+	}
+}
+</code></pre><h2 id=参考资料>参考资料</h2><ul><li><a href=https://godoc.org/gopkg.in/mgo.v2/bson#Setter>https://godoc.org/gopkg.in/mgo.v2/bson#Setter</a></li><li><a href=https://godoc.org/gopkg.in/mgo.v2/bson#Getter>https://godoc.org/gopkg.in/mgo.v2/bson#Getter</a></li></ul><div class=blog-tags><a href=https://blog.isayme.org/tags/golang/>golang</a>&nbsp;
+<a href=https://blog.isayme.org/tags/mgo/>mgo</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

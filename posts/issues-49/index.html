@@ -1,0 +1,32 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>编码风格: EditorConfig, Prettier, ESLint 作用</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="编码风格: EditorConfig, Prettier, ESLint 作用"><meta name=twitter:description content="目标 跨平台, 支持多编辑器, 文件无关, 统一个人编码风格, 尽量避免定制化设定."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>编码风格: EditorConfig, Prettier, ESLint 作用</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h1 id=目标>目标</h1><p>跨平台, 支持多编辑器, 文件无关, 统一个人编码风格, 尽量避免定制化设定.</p><h1 id=编码风格分类>编码风格分类</h1><h2 id=代码风格问题风格不符合一定规则>代码风格问题(风格不符合一定规则)</h2><p><a href=https://eslint.org/docs/rules/max-len>max-len</a>
+<a href=https://eslint.org/docs/rules/no-mixed-spaces-and-tabs>no-mixed-spaces-and-tabs</a>
+<a href=https://eslint.org/docs/rules/keyword-spacing>keyword-spacing</a>
+<a href=https://eslint.org/docs/rules/comma-style>comma-style</a></p><h2 id=代码质量问题使用方式有可能有问题>代码质量问题(使用方式有可能有问题)</h2><p><a href=https://eslint.org/docs/rules/no-unused-vars>no-unused-vars</a>
+<a href=https://eslint.org/docs/rules/no-extra-bind>no-extra-bind</a>
+<a href=https://eslint.org/docs/rules/no-implicit-globals>no-implicit-globals</a>
+<a href=https://eslint.org/docs/rules/prefer-promise-reject-errors>prefer-promise-reject-errors</a></p><h1 id=工具>工具</h1><h2 id=editorconfig>editorconfig</h2><p><code>EditorConfig helps maintain consistent coding styles for multiple developers working on the same project across various editors and IDEs.</code>
+适用 <code>代码风格问题</code>, 全平台支持, 语言无关.
+支持大多数编辑器. 控制语法无关的风格, 详细可配列表见: <a href=https://editorconfig.org/#file-format-details>https://editorconfig.org/#file-format-details</a></p><h2 id=prettier>Prettier</h2><p><code>An opinionated code formatter; Supports many languages; Integrates with most editors; Has few options</code>
+适用 <code>代码风格问题</code>, 主要是 Javascript/Node.js/Typescript 生态.
+使用 <code>prettier</code> 配置文件声明风格, 编辑器保存时自动格式化文件; 示例: <a href=https://github.com/isayme/prettier-config/blob/master/prettier.config.js>https://github.com/isayme/prettier-config/blob/master/prettier.config.js</a></p><h2 id=eslint>ESLint</h2><p><code>ESLint is a tool for identifying and reporting on patterns found in ECMAScript/JavaScript code, with the goal of making code more consistent and avoiding bugs.</code>
+主要适用 <code>代码质量问题</code>, 也适用<code>代码风格问题</code>, 主要面向 Javascript/Node.js/Typescript 生态.</p><h1 id=对比>对比</h1><h2 id=prettier-与-editorconfig-功能有重叠-两者差异是什么>Prettier 与 editorconfig 功能有重叠, 两者差异是什么?</h2><h3 id=两者的适用范围有差异>两者的适用范围有差异</h3><p>editorconfig 适用任何文件, Prettier 主要适用 Javascript 生态;
+比如 editorconfig 可以配置 Makefile 的缩进使用 TAB, 但 Prettier 不支持.
+以这个角度看, 建议两者都使用, 可以将 Prettier 配置为 editorconfig 相同的风格;</p><h3 id=editorconfig-声明面向编辑器-prettier-声明面向插件>editorconfig 声明面向编辑器, Prettier 声明面向插件</h3><p>比如 editorconfig 设置<code>indent_style = space</code> 和 <code>indent_size = 2</code>, 编辑器中输入<code>TAB</code>时, 会缩进 2 个空格.
+但如果 Prettier 设置 <code>tabWidth = 4</code>, 在使用文件报错自动格式化时, 会重新将缩进改为 4 个空格.</p><h3 id=prettier-在格式化时-优先使用自身的配置-降级使用-editorconfig-的配置>Prettier 在格式化时, 优先使用自身的配置, 降级使用 editorconfig 的配置</h3><h2 id=eslint-与-prettier-功能有重叠-两者差异是什么>ESLint 与 Prettier 功能有重叠, 两者差异是什么?</h2><h3 id=两者适用范围有差异>两者适用范围有差异</h3><p>ESLint 更多解决的是<code>代码质量问题</code>; Prettier 更多解决的是<code>代码风格问题</code>.</p><h3 id=eslint也可以格式化代码-为什么还要用-prettier>ESLint也可以格式化代码, 为什么还要用 prettier?</h3><p><a href=https://prettier.io/docs/en/comparison.html>Prettier 官网对比: Prettier vs. Linters</a>
+<a href=https://github.com/prettier/prettier-eslint/issues/101>If eslint can auto fix/format code why to use Prettier?</a></p><h1 id=官方网站>官方网站</h1><ul><li><a href=https://editorconfig.org/#file-format-details>EditorConfig</a></li><li><a href=https://prettier.io/>Prettier</a></li><li><a href=https://eslint.org/>ESLint</a></li></ul><h1 id=参考资料>参考资料</h1><p><a href=https://github.com/xtyi/blog/issues/2>EditorConfig，Prettier and ESLint</a>
+<a href=https://zhuanlan.zhihu.com/p/81764012>Prettier看这一篇就行了</a>
+<a href=https://pakatagoh.com/blog/setting-up-eslint-and-prettier-with-vs-code-in-2019>Setting up ESLint and prettier with VS Code in 2019</a>
+<a href=https://www.robertcooper.me/using-eslint-and-prettier-in-a-typescript-project>Using ESLint and Prettier in a TypeScript Project</a>
+<a href=https://zhuanlan.zhihu.com/p/80574300>搞懂 ESLint 和 Prettier</a>
+<a href=https://zhuanlan.zhihu.com/p/75531199>深入理解 ESLint</a>
+<a href=https://zhuanlan.zhihu.com/p/142105418>vscode 中 prettier 和 ESLint 冲突的一点探讨</a>
+<a href=https://gist.github.com/yangshun/318102f525ec68033bf37ac4a010eb0c>Comparison between tools that allow you to use ESLint and Prettier together</a></p></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

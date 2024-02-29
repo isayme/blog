@@ -1,0 +1,55 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>MinUnit -- 极简C单元测试框架</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="MinUnit -- 极简C单元测试框架"><meta name=twitter:description content="简介 面向对象编程中单元测试及其流行."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>MinUnit -- 极简C单元测试框架</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h2 id=简介>简介</h2><p>面向对象编程中单元测试及其流行. 诸如JUit(Java), SUnit(Smalltalk)以及CppUnit (C++)之类的框架都提供了功能丰富的接口函数. 然后对于那些要在条件受限环境(如嵌入式系统)做单元测试的开发者来说, 功能丰富意味着占用资源更多(译者注: 嵌入式环境内存及存储都受限). 好在单元测试的宗旨是测试而不是框架. MinUnit是一个C实现的极简单元测试框架. 它不做malloc之类的内存申请操作, 因此它理应能够胜任任何开发环境, 包括ROM级别的代码.</p><h2 id=源码>源码</h2><pre><code>/* file: minunit.h */
+#define mu_assert(message, test) do { if (!(test)) return message; } while (0)
+#define mu_run_test(test) do { char *message = test(); tests_run++; \
+                                if (message) return message; } while (0)
+extern int tests_run;  
+</code></pre><p>你没看错, 整个源码就3行(为方便阅读, 其中一个宏被展开放在两行).</p><h2 id=创建一个测试用例>创建一个测试用例</h2><p>MinUnit的测试用例就是一个函数. 如果测试通过, 函数返回0(NULL), 否则返回一个描述错误信息字符串.
+<code>mu_assert</code>是一个简单的宏, 如果传入的表达式<code>test</code>为false, 则返回对应的<code>message</code>描述信息. 宏<code>mu_run_test</code>执行一个测试用例, 如果用例fail, 立即返回. 恩, 就这样, 就这么简单.</p><h2 id=例子>例子</h2><p>下面的例子执行两个测试用例, 一个通过, 另一个失败.</p><pre><code>/* file minunit_example.c */
+#include &lt;stdio.h&gt;
+#include &quot;minunit.h&quot;
+
+int tests_run = 0;
+
+int foo = 7;  
+int bar = 4;
+
+static char * test_foo() {  
+    mu_assert(&quot;error, foo != 7&quot;, foo == 7);
+    return 0;
+}
+
+static char * test_bar() {  
+    mu_assert(&quot;error, bar != 5&quot;, bar == 5);
+    return 0;
+}
+
+static char * all_tests() {  
+    mu_run_test(test_foo);
+    mu_run_test(test_bar);
+    return 0;
+}
+
+int main(int argc, char **argv) {  
+    char *result = all_tests();
+    if (result != 0) {
+        printf(&quot;%s\n&quot;, result);
+    }
+    else {
+        printf(&quot;ALL TESTS PASSED\n&quot;);
+    }
+    printf(&quot;Tests run: %d\n&quot;, tests_run);
+
+    return result != 0;
+}
+</code></pre><h2 id=结束语>结束语</h2><p>有人以为实现一个单元测试框架很复杂. 其实你可以几行代码就实现一个, 就如本文中的MinUnit. 当然, 如果你熟悉类似JUnit这样功能齐全的测试框架, 最好用它们. 如果没有, 那你可以试试MinUnit, 或者花几个小时自己实现一个. 千万别不做单元测试.</p><h2 id=许可协议>许可协议</h2><p>You may use the code in this tech note for any purpose, with the understanding that it comes with NO WARRANTY.
+(不负责翻译: 本文的源码尽管拿去用, 但出问题时本人不负责.)</p><h2 id=附录-为什么用-do--while>附录: 为什么用 do {} while?</h2><p>很多人问我为什么宏mu_run_test中用do {} while语句. 其实这是标准C的惯例. 更多信息参见: <a href=http://www.eskimo.com/~scs/C-faq/q10.4.html>http://www.eskimo.com/~scs/C-faq/q10.4.html</a></p><blockquote><p>原文: <a href=http://www.jera.com/techinfo/jtns/jtn002.html>MinUnit &ndash; a minimal unit testing framework for C</a></p></blockquote><div class=blog-tags><a href=https://blog.isayme.org/tags/c/>c</a>&nbsp;
+<a href=https://blog.isayme.org/tags/test/>test</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

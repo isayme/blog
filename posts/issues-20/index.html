@@ -1,0 +1,41 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>使用 monkey 替换 Golang 标准库方法</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="使用 monkey 替换 Golang 标准库方法"><meta name=twitter:description content="Golang 标准库的json."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>使用 monkey 替换 Golang 标准库方法</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><p>Golang 标准库的<code>json.Marshal</code> & <code>json.Unmarshal</code> 方法性能并不高. 因而产生了第三方包解决此问题. 如: <a href=https://github.com/pquerna/ffjson>ffjson</a>, <a href=https://github.com/json-iterator/go>json-iterator</a>, <a href=https://github.com/mailru/easyjson>easyjson</a>.</p><p>但开发者在又序列化需求时一般都会使用 <code>encoding/json</code> 的 <code>json.*</code> 系方法. 第三方包需要新增依赖, 在性能不是瓶颈时自然更倾向于使用官方原生包. 毕竟官方包也会持续对性能做改进.</p><p>但如果真有需要替换掉<code>json.Marshal</code> 时又如何做呢? 解决方法是 <a href=https://github.com/bouk/monkey>Monkey patching in Go</a>:</p><pre><code>package main
+
+import (
+	&quot;encoding/json&quot;
+	&quot;fmt&quot;
+
+	&quot;github.com/bouk/monkey&quot;
+	jjson &quot;github.com/json-iterator/go&quot;
+)
+
+type User struct {
+	Name   string   `json:&quot;name&quot;`
+	Emails []string `json:&quot;emails&quot;`
+}
+
+func main() {
+	monkey.Patch(json.Marshal, func(v interface{}) ([]byte, error) {
+		fmt.Println(&quot;use jsoniter&quot;)
+		return jjson.Marshal(v)
+	})
+
+	u := User{}
+
+	if b, err := json.Marshal(u); err != nil {
+		fmt.Println(&quot;Marshal failed: &quot;, err)
+	} else {
+		fmt.Println(err, string(b))
+	}
+}
+</code></pre><p>虽然使用的还是 <code>json.Marshal</code>, 实际调用的已经是 Patch 后的方法. 此代码输出:</p><pre><code>use jsoniter
+&lt;nil&gt; {&quot;name&quot;:&quot;&quot;,&quot;emails&quot;:null}
+</code></pre><h2 id=参考资料>参考资料</h2><ul><li><a href=http://xiaorui.cc/2018/04/02/%E4%BD%BF%E7%94%A8monkey%E8%A1%A5%E4%B8%81%E6%9B%BF%E6%8D%A2golang%E7%9A%84%E6%A0%87%E5%87%86%E5%BA%93/>使用monkey补丁替换golang的标准库</a></li></ul><div class=blog-tags><a href=https://blog.isayme.org/tags/golang/>golang</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

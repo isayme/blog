@@ -1,0 +1,35 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>Go: empty slice vs nil slice</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="Go: empty slice vs nil slice"><meta name=twitter:description content="Go Playgroud: https://play."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>Go: empty slice vs nil slice</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><blockquote><p>Go Playgroud: <a href=https://play.golang.org/p/DNJ0Q9YrE14>https://play.golang.org/p/DNJ0Q9YrE14</a></p></blockquote><blockquote><p>var nilSlice []int
+emptySlice := []int{}</p></blockquote><h2 id=相同点>相同点</h2><h3 id=lens>len(s)</h3><p>len(nilSlice) == 0 // true
+len(emptySlice) == 0 // true</p><h3 id=caps>cap(s)</h3><p>len(nilSlice) == 0 // true
+len(emptySlice) == 0 // true</p><h2 id=不同点>不同点</h2><h3 id=s--nil->s == nil ?</h3><p>nilSlice == nil // true
+emptySlice == nil // false</p><h3 id=jsonmarshal>json.Marshal</h3><p>json.Marshal(nilSlice) // null
+json.Marshal(emptySlice) // []</p><h3 id=jsonunmarshal>json.Unmarshal</h3><p><code>{}</code> Unmarshal 后得到 nil slice;
+<code>{"arr": null}</code> Unmarshal 后得到 nil slice; // 如果是HTTP API, 则服务端无法知道客户端是未传<code>arr</code>字段还是传了一个<code>null</code>;
+<code>{"arr": []}</code> Unmarshal 后得到 empty slice;</p><h2 id=如何检测是否是-nil-slice>如何检测是否是 nil slice</h2><p>虽然 <code>nilSlice == nil</code>, 但换一种场景却无法判断:</p><pre><code>var i interface{}
+i = nilSlice
+
+i == nil // false, 原因见: https://github.com/isayme/blog/issues/25
+</code></pre><p>这里引入 <a href=https://github.com/stretchr/testify/blob/04af85275a5c7ac09d16bb3b9b2e751ed45154e5/assert/assertions.go#L418>stretchr/testify:IsNil</a> 中的方法:</p><pre><code>// IsNil 判定是否是 nil, 支持 pointer/channel/map/slice
+func IsNil(v interface{}) bool {
+	if v == nil {
+		return true
+	}
+
+	value := reflect.ValueOf(v)
+	kind := value.Kind()
+	if kind &gt;= reflect.Chan &amp;&amp; kind &lt;= reflect.Slice {
+		return value.IsNil()
+	}
+
+	return false
+}
+</code></pre><h2 id=参考资料>参考资料</h2><ul><li><a href=https://www.pixelstech.net/article/1539870875-Empty-slice-vs-nil-slice-in-GoLang>Empty slice vs nil slice in GoLang | Pixelstech.net</a></li><li><a href=https://stackoverflow.com/questions/44305170/nil-slices-vs-non-nil-slices-vs-empty-slices-in-go-language>nil slices vs non-nil slices vs empty slices in Go language - Stack Overflow</a></li></ul><div class=blog-tags><a href=https://blog.isayme.org/tags/golang/>golang</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

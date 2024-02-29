@@ -1,0 +1,117 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>SpringBoot 集成 MapStruct</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="SpringBoot 集成 MapStruct"><meta name=twitter:description content="集成步骤 1."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>SpringBoot 集成 MapStruct</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h1 id=集成步骤>集成步骤</h1><h2 id=1-引入依赖>1. 引入依赖</h2><pre><code>&lt;!-- 样例 https://github.com/mapstruct/mapstruct-examples/blob/master/mapstruct-lombok/pom.xml --&gt;
+&lt;properties&gt;  
+	&lt;java.version&gt;1.8&lt;/java.version&gt;
+	&lt;!-- mapstruct 版本 --&gt;
+	&lt;org.mapstruct.version&gt;1.4.2.Final&lt;/org.mapstruct.version&gt;
+	&lt;!-- lombok 1.18.16 版本之后用 --&gt;
+	&lt;lombok-mapstruct-binding.version&gt;0.2.0&lt;/lombok-mapstruct-binding.version&gt;
+	&lt;!-- lombok 版本 --&gt;
+	&lt;org.projectlombok.verion&gt;1.18.22&lt;/org.projectlombok.verion&gt;
+&lt;/properties&gt;
+
+&lt;dependencies&gt;
+	&lt;dependency&gt;  
+		&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;  
+		&lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;  
+	&lt;/dependency&gt;
+	
+	&lt;!-- 引入 mapstruct --&gt;
+	&lt;dependency&gt;  
+		&lt;groupId&gt;org.mapstruct&lt;/groupId&gt;  
+		&lt;artifactId&gt;mapstruct&lt;/artifactId&gt;  
+		&lt;version&gt;${org.mapstruct.version}&lt;/version&gt;  
+	&lt;/dependency&gt;
+	
+	&lt;!-- 引入 lombok --&gt;
+	&lt;dependency&gt;
+		&lt;groupId&gt;org.projectlombok&lt;/groupId&gt;  
+		&lt;artifactId&gt;lombok&lt;/artifactId&gt;  
+		&lt;version&gt;${org.projectlombok.verion}&lt;/version&gt;  
+	&lt;/dependency&gt;  
+&lt;/dependencies&gt;
+
+&lt;build&gt;  
+	&lt;plugins&gt;  
+		&lt;plugin&gt;  
+			&lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;  
+			&lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;  
+		&lt;/plugin&gt;
+		&lt;plugin&gt;  
+			&lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;  
+			&lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;  
+			&lt;version&gt;3.8.1&lt;/version&gt;  
+			&lt;configuration&gt;  
+				&lt;source&gt;1.8&lt;/source&gt;
+				&lt;target&gt;1.8&lt;/target&gt;
+				&lt;annotationProcessorPaths&gt;  
+				&lt;!-- mapstruct 插件 --&gt;
+				&lt;path&gt;  
+					&lt;groupId&gt;org.mapstruct&lt;/groupId&gt;  
+					&lt;artifactId&gt;mapstruct-processor&lt;/artifactId&gt;  
+					&lt;version&gt;${org.mapstruct.version}&lt;/version&gt;  
+				&lt;/path&gt;  
+				&lt;!-- lombok 插件 --&gt;
+				&lt;path&gt;  
+					&lt;groupId&gt;org.projectlombok&lt;/groupId&gt;  
+					&lt;artifactId&gt;lombok&lt;/artifactId&gt;  
+					&lt;version&gt;${org.projectlombok.verion}&lt;/version&gt;  
+				&lt;/path&gt;
+				&lt;path&gt;
+					&lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+					&lt;artifactId&gt;lombok-mapstruct-binding&lt;/artifactId&gt;
+					&lt;version&gt;${lombok-mapstruct-binding.version}&lt;/version&gt;
+				&lt;/path&gt;
+				&lt;!-- other annotation processors --&gt;  
+				&lt;/annotationProcessorPaths&gt;  
+				&lt;compilerArgs&gt;  
+					&lt;!-- mapstruct 配置，使得定义的 Mapper 可通过 @Resource 注解注入 --&gt;
+					&lt;arg&gt;
+						-Amapstruct.defaultComponentModel=spring  
+					&lt;/arg&gt;  
+				&lt;/compilerArgs&gt;
+			&lt;/configuration&gt;  
+		&lt;/plugin&gt;  
+	&lt;/plugins&gt;  
+&lt;/build&gt;
+</code></pre><h2 id=2-定义模型及模型转换接口>2. 定义模型及模型转换接口</h2><pre><code>@Data  
+public class Source {  
+	private String k;  
+}
+
+@Data  
+public class Destination {  
+	private String k;  
+}
+
+// @Mapper(componentModel = &quot;spring&quot;)  如未配置defaultComponentModel=spring，可以在此处配置。
+@Mapper
+public interface Converter {  
+	Destination convertToDestination(Source s);  
+}
+
+</code></pre><h2 id=3-使用模型转换器>3. 使用模型转换器</h2><pre><code>import static org.junit.Assert.assertEquals;
+
+@SpringBootTest
+class ConverterTest {
+	// 自动注入
+	@Resource
+	private Converter converter;
+	
+	@Test
+	public test() {
+		Source source = new Source();  
+		source.setK(UUID.randomUUID().toString());  
+		Destination destination = myMapper.to(source);
+		assertEquals(destination.getK(), source.getK());
+	}
+}
+</code></pre><h1 id=常见场景及解决方案>常见场景及解决方案</h1><ul><li><a href=https://juejin.cn/post/6994233847076356133#heading-7>对象转换工具 MapStruct 介绍</a></li><li><a href=https://blog.lupf.cn/articles/2021/06/11/1623373787754.html>还用 BeanUtils 拷贝对象？MapStruct 才是王者！一文玩转 MapStruct 全场景</a></li></ul><h1 id=参考链接>参考链接</h1><ul><li><a href=https://mapstruct.org/>MapStruct 官网</a></li><li><a href=https://mapstruct.org/faq/#Can-I-use-MapStruct-together-with-Project-Lombok>MapStruct FAQ: Can I use MapStruct together with Project Lombok?</a></li><li><a href=https://mapstruct.org/documentation/stable/reference/html/>MapStruct 官方文档</a></li><li><a href=https://www.justdojava.com/2020/08/23/beancopy/># 七种对象复制工具类，阿粉该 Pick 谁？</a></li></ul></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>
