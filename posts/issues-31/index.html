@@ -1,0 +1,22 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>列表自定义排序</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="列表自定义排序"><meta name=twitter:description content="假设一个 TODO 应用需要展示一组任务(Task), 任务从属于一个清单(List)."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>列表自定义排序</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><p>假设一个 TODO 应用需要展示一组任务(Task), 任务从属于一个清单(List).</p><p>每个清单下的任务展示必然带来一个需求: <strong>排序</strong></p><h2 id=固定排序>固定排序</h2><p>简单做法是软件提供多种预定义的排序规则. 比如 按照创建实际降序排; 按照截止时间降序排.</p><h2 id=自定义排序>自定义排序</h2><p>固定排序实现简单, 但不一定符合用户灵活的场景. 自定义排序的能力能够让用户拥有更大的自由度.</p><p>为了记录排序信息, 实践中存在几种方案:</p><h3 id=排序信息记录在清单上>排序信息记录在清单上</h3><pre><code>// List Item
+{
+  &quot;tasks&quot;: [task1, task3, task2]
+}
+</code></pre><p>清单上使用数组类型字段记录了任务的顺序.</p><p>数据模型通俗易懂. 需要调整顺序时<strong>告诉服务端需要放到指定任务之后</strong>即可.</p><p>这个方案存在几个问题:</p><ol><li>任务删除需要跟新<code>tasks</code>字段, 不然就会存在无效数据;</li><li>新增任务需要自动加入到<code>tasks</code>字段, 不然就会无新任务的排序信息;</li><li>清单下任务数增加时会导致<code>tasks</code>信息过大; (mongodb 会限制一个 Document 的大小)</li><li>任务跨清单移动需要更改两个清单的<code>tasks</code>字段;</li><li>由于清单的<code>tasks</code>严重依赖与任务, 复制清单的操作必须先复制任务;</li><li>批量的任务创建/删除 会带来更多的<code>tasks</code>数据更新问题(数组更新不够原子atomic)</li></ol><p>总结: <strong>任何可能导致排序变化的场景都要更新<code>tasks</code>字段; 高并发时很容易导致数据不一致(tasks记录的信息与实际清单下的任务数不一致);</strong></p><h3 id=排序信息记录在任务上-链表式>排序信息记录在任务上: 链表式</h3><pre><code>// Task Item
+{
+	prevTask: task2 // 记录前一个任务信息
+}
+</code></pre><p>经典的链表结构. 根据<code>prevTask</code>构建完链表即完成排序.</p><p>链表的问题是不能断, 在排序变化时需要慎重更新相关任务的<code>prevTask</code>, 避免短链:</p><ol><li>新增/删除任务等价于链表节点插入;</li><li>任务移动到其他清单等价于链表节点删除+链表节点插入;</li><li>清单复制必须依据链表顺序逐个复制, 严重影响复制效率;</li><li>高并发插入容易造成链表断链(链表节点插入非原子);</li></ol><h3 id=排序信息记录在任务上-位置信息>排序信息记录在任务上: 位置信息</h3><p>之前在知乎上有个简单的介绍: <a href=https://www.zhihu.com/question/55789722/answer/146889135>teambition的任务卡排序，数据是怎么存储的？ - 知乎</a></p><pre><code>// Task Item
+{
+  pos: 12345 // 记录任务的相对位置
+}
+</code></pre><p>整个排序按照<code>pos</code>值升序.</p><p>为了确保在两个任务间插入新任务时有可用的<code>pos</code>取值范围, 期望任意两个相邻任务的<code>pos</code>差值尽可能大, 但又不能太大(最大利用int32/int64取值范围以记录更多的任务排序信息)</p><p>缺点:</p><ol><li>两个任务间同时/批量插入一个任务则会导致最终两个新任务 pos 值相同;</li><li>用户使用过程中会导致两个任务<code>pos</code>差值不足以容纳新的任务, 需要重排整个清单, 重排期间的任务写入也会带来风险;</li></ol><div class=blog-tags><a href=https://blog.isayme.org/tags/api/>api</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

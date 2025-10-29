@@ -1,0 +1,131 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>dataloader 体验</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="dataloader 体验"><meta name=twitter:description content="背景 系统有 任务, 每个任务有一个执行者."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>dataloader 体验</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h1 id=背景>背景</h1><p>系统有 <code>任务</code>, 每个任务有一个<code>执行者</code>. 服务端提供API用户获取任务数据.</p><pre><code>// 用户
+var UserSchema = new Schema({
+  name: String
+})
+var User = mongoose.model('User', UserSchema)
+// 任务
+var TaskSchema = new Schema({
+  name: String,
+  _creatorId: {
+    ref: 'User',
+    type: Schema.Types.ObjectId
+  },
+  _executorId: {
+    ref: 'User',
+    type: Schema.Types.ObjectId
+  }
+})
+var Task = mongoose.model('Task', UserSchema)
+</code></pre><h1 id=需求1-获取某个任务>需求1: 获取某个任务</h1><pre><code>const task = await Task.findById(_id).exec()
+</code></pre><h1 id=需求2-获取某个任务及创建者>需求2: 获取某个任务及创建者</h1><pre><code>const task = await Task.findById(_id).exec()
+const creator = await User.findById(task._creatorId).exec()
+// 注: 由于 mongoose 内部实现, task.toJSON() 后是没有此 creator 字段, 此处仅示例用, 下同.
+task.creator = creator
+</code></pre><h1 id=需求3-获取一组任务>需求3: 获取一组任务</h1><pre><code>const tasks = await Task.find(conds).exec()
+</code></pre><h1 id=需求4-获取一组任务及创建者>需求4: 获取一组任务及创建者</h1><pre><code>const tasks = await Task.find(conds).exec()
+await Promise.all(tasks.map(async function (task) {
+  const creator = await User.findById(task.creatorId).exec()
+  task.creator = creator
+}))
+</code></pre><h2 id=问题>问题:</h2><ul><li>多个任务的创建者可能相同, 那么就会产生重复创建的查询, 浪费资源又影响响应时间;</li></ul><h2 id=改进思路>改进思路:</h2><ul><li>将创建者ID去重后批量获取</li></ul><pre><code>const tasks = await Task.find(conds).exec()
+
+// 也可以直接用 _.uniqBy
+let creatorIds = tasks.map(task =&gt; `${task._creatorId}`)
+creatorIds = _.uniq(creatorIds)
+
+const creators = await User.find({
+  _id: {
+    $in: creatorIds
+  }
+}).exec()
+
+const map = new Map()
+creators.forEach(creator =&gt; {
+  map.set(`${creator._id}`, creator)
+})
+
+tasks.forEach(task =&gt; {
+  task.creator = map.get(`${task._creatorId}`)
+})
+</code></pre><h2 id=问题-1>问题:</h2><ul><li>过程复杂;</li><li>与获取单个任务及创建者流程不一致;</li><li>多次map消耗cpu资源;</li></ul><h2 id=改进思路-1>改进思路:</h2><ul><li>使用 <a href=https://github.com/facebook/dataloader>dataloader</a> 大法</li></ul><pre><code>const DataLoader = require('dataloader')
+
+const tasks = await Task.find(conds).exec()
+
+// 注: 每个 request 单独 new 一个 loader, 比如初始化后赋值为 req.dataloader.user
+var userLoader = new DataLoader(ids =&gt; {
+  // 示意用, 会存在问题, 详见 **特别须知** 中的实现
+  return User.find({
+    _id: {
+      $in: ids
+    }
+  }).exec()
+}, { cacheKeyFn: id =&gt; `${id}` })
+
+await Promise.all(tasks.map(async function (task) {
+  let creator = await userLoader.load(task._creatorId)
+  task.creator = creator
+}))
+</code></pre><h2 id=优势>优势</h2><ol><li>获取时是单个获取, 无需认为拼装成数组再批量请求;</li><li>数据缓存(内存), 一次获取后, 之后的获取不再需要再次发送 mongodb 请求;</li></ol><h1 id=polyfill>Polyfill</h1><pre><code>class DataLoader {
+  constructor (batchLoadFn, { cacheKeyFn }) {
+    this._batchLoadFn = batchLoadFn
+    this._cacheKeyFn = cacheKeyFn
+    this._batchQuene = []
+    this._cacheMap = new Map()
+  }
+  
+  load (_id) {
+    const cacheKey = this._cacheKeyFn(_id)
+    if (this._cacheMap.has(cacheKey)) {
+      return this._cacheMap.get(cacheKey)
+    } else {
+      const p = new Promise((resolve, reject) =&gt; {
+        this._batchQuene.push({ _id, resolve, reject })
+        if (this._batchQuene.length === 1) {
+          process.nextTick(() =&gt; {
+            const queue = this._batchQuene
+            this._batchQuene = []
+            this._batchLoadFn(queue.map(ele =&gt; ele._id))
+              .then(docs =&gt; {
+                queue.forEach((ele, idx) =&gt; ele.resolve(docs[idx]))
+              })
+              .catch(err =&gt; {
+                queue.forEach(ele =&gt; ele.reject(err))
+              })
+          })
+        }
+      })
+      this._cacheMap.set(cacheKey, p)
+      return p
+    }
+  }
+}
+</code></pre><h1 id=特别须知>特别须知</h1><h2 id=batchloadfn-要求返回数据长度必须和-ids-一致>batchLoadFn 要求返回数据长度必须和 ids 一致;</h2><h2 id=batchloadfn-要求保障返回数据顺序和-ids-一致>batchLoadFn 要求保障返回数据顺序和 ids 一致;</h2><pre><code>const batchLoadFn = (model, ids) =&gt; {
+  return model
+    .find({
+      _id: {
+        $in: ids
+      }
+    })
+    .exec()
+    .then(docs =&gt; {
+      // 返回数据必须和 ids.length 一致, 且映射顺序也需要保持一致
+      // refer: https://github.com/facebook/dataloader#batch-function
+      const docMap = new Map()
+      docs.forEach(doc =&gt; {
+        docMap.set(`${doc._id}`, doc)
+      })
+      return ids.map(_id =&gt; {
+        return docMap.get(`${_id}`) || null
+      })
+    })
+}
+</code></pre><h1 id=参考资料>参考资料</h1><ul><li><a href=https://github.com/facebook/dataloader>DataLoader</a></li><li><a href=https://jira.mongodb.org/browse/SERVER-7528>Order of responses to a MongoDB $in query</a></li><li><a href=https://github.com/facebook/dataloader#batch-function>DataLoader/</a><a href=https://github.com/facebook/dataloader#batch-function><strong>Batch Function</strong></a></li></ul><div class=blog-tags><a href=https://blog.isayme.org/tags/node.js/>Node.js</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

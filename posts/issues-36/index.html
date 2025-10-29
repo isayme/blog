@@ -1,0 +1,28 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>Go: HTTP API 部分(Partial)更新</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="Go: HTTP API 部分(Partial)更新"><meta name=twitter:description content="背景 Golang HTTP 开发中, 解析客户端传入的数据可以使用 json."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>Go: HTTP API 部分(Partial)更新</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h2 id=背景>背景</h2><p>Golang HTTP 开发中, 解析客户端传入的数据可以使用 <code>json.Unmarshal</code> 方法.</p><p>假设有个 TODO 服务, 提供了任务更新能力.</p><h2 id=同时更新标题及执行者>同时更新标题及执行者</h2><p>定义一个结构体, 用于解析输入的 json 参数, 从而获得客户端输入的参数.</p><pre><code>type TaskUpdate struct {
+    Title string `json:&quot;title&quot;`
+    Executor string `json:&quot;executor&quot;`
+}
+
+u := TaskUpdate{}
+json.Unmarshal([]byte(`{&quot;title&quot;: &quot;newTitle&quot;, &quot;executor&quot;: &quot;newExecutor&quot;}`), &amp;u)
+fmt.Printf(&quot;%#v&quot;, u)
+</code></pre><p><a href=https://play.golang.org/p/toWu1ZBd5uj>https://play.golang.org/p/toWu1ZBd5uj</a></p><h2 id=只更新标题>只更新标题</h2><p>HTTP 服务设计更新API时, 为了方便调用者, 会做成 PATCH 更新, 即仅更新客户端指定的字段.</p><p>假如客户端只需要更新标题, 未传 <code>executor</code> 字段. 由于Go语言的特性, <code>Executor</code> 在 Unmarshal 后拿到的值是空字符串, 导致更新后执行者信息被置空.</p><p>为了解决这个问题, 可以把字段定义成指针: <strong>当客户端未传入<code>executor</code>时, Unmarshal 后 Excutor 值为 nil</strong>.</p><pre><code>type TaskUpdate struct {
+	Title *string `json:&quot;title&quot;`
+	Executor *string `json:&quot;executor&quot;`
+}
+
+u := TaskUpdate{}
+json.Unmarshal([]byte(`{&quot;title&quot;: &quot;newTitle&quot;}`), &amp;u)
+fmt.Printf(&quot;%#v&quot;, u)
+</code></pre><p><a href=https://play.golang.org/p/ZVuFEhWTCpc>https://play.golang.org/p/ZVuFEhWTCpc</a></p><h2 id=清空执行者>清空执行者</h2><p>如果客户端需要清空执行者信息. 在 json 的表述中, 需要客户端传入 <code>”executor”: null</code>.</p><p>但 Go 语言无法区分 json 中的 <code>null</code>, 即使客户端传入了 <code>”executor”: null</code>, Unmarshal 后 <code>Executor</code> 的值依然是 <code>nil</code>!</p><p><a href=https://play.golang.org/p/vEcm-Z21yze>https://play.golang.org/p/vEcm-Z21yze</a></p><p>为了解决此问题, <a href=https://www.calhoun.io/how-to-determine-if-a-json-key-has-been-set-to-null-or-not-provided/>How to determine if a JSON key has been set to null or not provided - Calhoun.io</a> 文章中提到了可行的解决办法: 定义结构体并自定义<code>UnmarshalJSON</code>方法, 解析后的结构体标记了客户端是否传入了<code>null</code>或合法的值.</p><p><img src=https://user-images.githubusercontent.com/1747852/48761747-5f473180-ece4-11e8-9654-5b2e7547bf69.png alt=image></p><p><a href=https://github.com/romanyx/nullable>GitHub - romanyx/nullable: Provide types that allows to determine if a JSON key has been set to null or not provided</a> 依据此方法提供了更多类型的实现.</p><h2 id=参考资料>参考资料</h2><ul><li><a href=https://www.calhoun.io/how-to-determine-if-a-json-key-has-been-set-to-null-or-not-provided/>How to determine if a JSON key has been set to null or not provided - Calhoun.io</a></li><li><a href=https://willnorris.com/2014/05/go-rest-apis-and-pointers>Go, REST APIs, and Pointers</a></li><li><a href=https://github.com/romanyx/nullable>GitHub - romanyx/nullable: Provide types that allows to determine if a JSON key has been set to null or not provided</a></li></ul><div class=blog-tags><a href=https://blog.isayme.org/tags/http/>HTTP</a>&nbsp;
+<a href=https://blog.isayme.org/tags/api/>api</a>&nbsp;
+<a href=https://blog.isayme.org/tags/golang/>golang</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

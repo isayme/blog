@@ -1,0 +1,49 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>mgo 使用入门及进阶</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="mgo 使用入门及进阶"><meta name=twitter:description content="基本结构定义 type User struct {ID bson."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>mgo 使用入门及进阶</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h2 id=基本结构定义>基本结构定义</h2><pre><code>type User struct {
+	ID   bson.ObjectId `bson:&quot;_id&quot;`   // 通过 bson tag 定义在数据库的字段名
+	Name string        `bson:&quot;name&quot;` // 如果没有 bson tag, 则会使用字段名小写
+}
+</code></pre><h2 id=_id-自动生成>_id 自动生成</h2><pre><code>type User struct {
+	ID   bson.ObjectId `bson:&quot;_id,omitempty&quot;`
+}
+</code></pre><p>如果 <code>ID</code> 字段的 <code>bson</code> 不设置<code> omitempty</code>, 则创建数据时需要主动赋值. 带上 <code>omitempty</code>, 则会由数据库自动生成一个值. 缺点是使用<code>Insert</code>创建完无法知道<code>ID</code>值.</p><blockquote><p>注1: 仅针对 <code>_id</code> 字段会自动赋值.
+注2: 如果<code>json</code>/<code>bson</code> tag 之间使用空格分隔, 不可用 Tab 分隔: <a href=https://stackoverflow.com/a/20739427/1918831>Cannot retrieve “_id” value using mgo with golang</a></p></blockquote><h2 id=数组>数组</h2><pre><code>type User struct {
+	ID     bson.ObjectId `bson:&quot;_id&quot;`
+	Name   string        `json:&quot;name&quot;`
+	Emails []string      `json:&quot;emails&quot;`
+}
+</code></pre><p>其中<code>Emails</code>是数组:</p><ol><li>当 <code>Emails == nil</code> 时, 写入数据库时会写入空数组<code>[]</code>;</li><li>当数据库中 <code>emails == null</code> 时, 读出的 <code>Emails == nil</code>, json 序列化救过会是<code>"emails": null</code>;</li></ol><p>TODO: 客户端调用API时会期望<code>emails</code>永远是个数组, 所以需要有个方法在反序列化时将 <code>Emails == nil</code> 的场景处理掉.</p><h2 id=内嵌结构体>内嵌结构体</h2><pre><code>type Admin struct {
+	User  `bson:&quot;,inline&quot;`
+}
+</code></pre><p>如果不使用 <code>bson:",inline"</code>, 最终的数据库会是这样:</p><pre><code>{
+  // 其他字段忽略...
+  &quot;user&quot;: {
+    &quot;phone&quot;: &quot;xxx&quot;
+  }
+}
+</code></pre><p>官方文档: <a href=https://godoc.org/labix.org/v2/mgo/bson#Marshal>mgo/bson#Marshal</a></p><h2 id=指针-与-选填字段>指针 与 选填字段</h2><pre><code>type Task struct {
+  ID         bson.ObjectId  `json:&quot;_id&quot; bson:&quot;_id&quot;`
+  
+  // 必填字段
+  CreatorID  bson.ObjectId  `json:&quot;_creatorId&quot; bson:&quot;_creatorId&quot;`
+
+  // 非必填, **为空时数据库存储为 null**
+  ExecutorID *bson.ObjectId `json:&quot;_executorId&quot; bson:&quot;_executorId&quot;`
+
+  // 非必填, **为空时数据库不存储此字段**
+  AppID      bson.ObjectId  `json:&quot;_appId,omitempty&quot; bson:&quot;_appId,omitempty&quot;`
+}
+</code></pre><blockquote><p>var id1 = bson.NewObjectId()
+var id2 bson.ObjectId
+var id3 *bson.ObjectId = nil
+var id4 *bson.ObjectId = &id1
+var id5 *bson.ObjectId = &id2</p></blockquote><table><thead><tr><th>字段定义 vs 写入行为</th><th>bson.ObjectId</th><th>bson.ObjectId + omitempty</th><th>*bson.ObjectId</th><th>*bson.ObjectId + omitempty</th></tr></thead><tbody><tr><td>id1</td><td>√</td><td>√</td><td>-</td><td>-</td></tr><tr><td>id2</td><td>×</td><td>√*</td><td>-</td><td>-</td></tr><tr><td>id3</td><td>-</td><td>-</td><td>√</td><td>√*</td></tr><tr><td>id4</td><td>-</td><td>-</td><td>√</td><td>√</td></tr><tr><td>id5</td><td>-</td><td>-</td><td>×</td><td>×</td></tr></tbody></table><blockquote><p>*: 表示写入后无此字段, 区别与写入后值为null</p></blockquote><h2 id=其他资料>其他资料</h2><ul><li><a href=https://www.4async.com/2016/01/something-about-mgo-driver/>Mgo 库的常见坑总结</a></li><li><a href=https://www.do1618.com/archives/914/golang-mgo%E7%AC%94%E8%AE%B0/>Golang Mgo笔记</a></li><li><a href=https://www.cnblogs.com/shenguanpu/p/5318727.html>golang mgo的mongo连接池设置：必须手动加上maxPoolSize</a></li><li><a href=https://cardinfolink.github.io/2017/05/17/mgo-session/>mgo 的 session 与连接池</a></li></ul><div class=blog-tags><a href=https://blog.isayme.org/tags/golang/>golang</a>&nbsp;
+<a href=https://blog.isayme.org/tags/mgo/>mgo</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

@@ -1,0 +1,27 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>数据库中树状数据模型存储</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="数据库中树状数据模型存储"><meta name=twitter:description content="数据库中树状数据模型存储 背景 典型的树状结构的场景有:"><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>数据库中树状数据模型存储</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h1 id=数据库中树状数据模型存储>数据库中树状数据模型存储</h1><h1 id=背景>背景</h1><p>典型的树状结构的场景有:</p><ul><li>文件库;</li><li>企业部门组织(部门及子部门)</li></ul><h1 id=树状数据模型方案分析>树状数据模型方案分析</h1><p><img src=https://user-images.githubusercontent.com/1747852/47803540-b43efa00-dd6d-11e8-8407-9e3f24325bc9.png alt=image></p><h2 id=方案a-model-tree-structures-with-parent-references>方案A: Model Tree Structures with Parent References</h2><pre><code>db.categories.insert( { _id: &quot;MongoDB&quot;, parent: &quot;Databases&quot; } )
+db.categories.insert( { _id: &quot;dbm&quot;, parent: &quot;Databases&quot; } )
+db.categories.insert( { _id: &quot;Databases&quot;, parent: &quot;Programming&quot; } )
+db.categories.insert( { _id: &quot;Languages&quot;, parent: &quot;Programming&quot; } )
+db.categories.insert( { _id: &quot;Programming&quot;, parent: &quot;Books&quot; } )
+db.categories.insert( { _id: &quot;Books&quot;, parent: null } )
+</code></pre><p><strong>优点</strong></p><ol><li>数据模型简洁, 含义清晰;</li><li>改变所属父级时, 只需要修改一条数据的<code>parent</code>;</li></ol><p><strong>缺点</strong></p><ol><li>通过父级节点查找<code>子孙</code>节点需要递归操作;</li><li>通过<code>子孙</code>节点查找<code>祖先</code>节点需要递归操作;</li></ol><h2 id=方案b-model-tree-structures-with-an-array-of-ancestors>方案B: Model Tree Structures with an Array of Ancestors</h2><pre><code>db.categories.insert( { _id: &quot;MongoDB&quot;, ancestors: [ &quot;Books&quot;, &quot;Programming&quot;, &quot;Databases&quot; ], parent: &quot;Databases&quot; } )
+db.categories.insert( { _id: &quot;dbm&quot;, ancestors: [ &quot;Books&quot;, &quot;Programming&quot;, &quot;Databases&quot; ], parent: &quot;Databases&quot; } )
+db.categories.insert( { _id: &quot;Databases&quot;, ancestors: [ &quot;Books&quot;, &quot;Programming&quot; ], parent: &quot;Programming&quot; } )
+db.categories.insert( { _id: &quot;Languages&quot;, ancestors: [ &quot;Books&quot;, &quot;Programming&quot; ], parent: &quot;Programming&quot; } )
+db.categories.insert( { _id: &quot;Programming&quot;, ancestors: [ &quot;Books&quot; ], parent: &quot;Books&quot; } )
+db.categories.insert( { _id: &quot;Books&quot;, ancestors: [ ], parent: null } )
+</code></pre><p><strong>优点</strong></p><ol><li>通过父级节点查找<code>子孙</code>节点只需一次请求;</li><li>任一节点都直接保存了<code>祖先</code>节点的信息;</li></ol><pre><code>db.categories.find({ _id: { $in: doc.ancestors } }) // 找祖先
+db.categories.find({ ancestors: 'Books' }) // 找子孙
+db.categories.find({ 'ancestors.0': 'Books' }) // 找儿子
+db.categories.find({ 'ancestors.1': 'Books' }) // 找孙子
+</code></pre><p><strong>缺点</strong></p><ol><li>改变所属父级时, 除自身的<code>ancestors</code>需要更新外, 所有<code>子孙</code>节点的<code>ancestors</code>信息都需要更新;</li></ol><h1 id=总结>总结</h1><p><code>方案A</code> 和 <code>方案B</code> 各有优劣, 需要依据实际场景判断方案选择:
+<strong>业务场景经常需要通过一个节点查找祖先或子孙, 则选择<code>方案B</code>, 否则选择<code>方案A</code></strong></p><h1 id=参考资料>参考资料</h1><ul><li><a href=https://docs.mongodb.com/manual/tutorial/model-tree-structures-with-parent-references/>Model Tree Structures with Parent References</a></li><li><a href=https://docs.mongodb.com/manual/tutorial/model-tree-structures-with-ancestors-array/>Model Tree Structures with an Array of Ancestors</a></li></ul></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

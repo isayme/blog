@@ -1,0 +1,16 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>Golang 获取当前运行函数名</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="Golang 获取当前运行函数名"><meta name=twitter:description content="代码 func getCurrentFuncName() string {pc := make([]uintptr, 1)runtime."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>Golang 获取当前运行函数名</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h2 id=代码>代码</h2><pre><code>func getCurrentFuncName() string {
+	pc := make([]uintptr, 1)
+	runtime.Callers(2, pc)
+	f := runtime.FuncForPC(pc[0])
+	return f.Name()
+}
+</code></pre><h2 id=还有另外一种写法-但是效率低了很多>还有另外一种写法, 但是效率低了很多</h2><p>详细见: <a href=https://github.com/isayme/blog/blob/master/issues/14/>https://github.com/isayme/blog/blob/master/issues/14/</a></p><blockquote><p>执行<code>make bench</code> 查看 benchmark 数据</p></blockquote><h2 id=参考资料>参考资料</h2><ul><li><a href=https://stackoverflow.com/questions/25927660/golang-get-current-scope-of-function-name/25927915>golang: get current scope of function name</a></li><li><a href=https://stackoverflow.com/questions/7052693/how-to-get-the-name-of-a-function-in-go>How to get the name of a function in Go?</a></li></ul><div class=blog-tags><a href=https://blog.isayme.org/tags/golang/>golang</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

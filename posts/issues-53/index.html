@@ -1,0 +1,39 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>Lerna 学习笔记</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="Lerna 学习笔记"><meta name=twitter:description content="Lerna 是什么  A tool for managing JavaScript projects with multiple packages."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>Lerna 学习笔记</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h1 id=lerna-是什么>Lerna 是什么</h1><blockquote><p>A tool for managing JavaScript projects with multiple packages.</p></blockquote><p><a href=https://lerna.js.org/>Lerna</a> 是一个管理工具，用于管理包含多个软件包（package）的 JavaScript 项目。</p><h1 id=解决什么问题>解决什么问题</h1><p>为了代码共享, 大型项目会将代码分成多个代码仓库为独立的包(package).</p><p>如果某个包更改, 需要反向要求依赖该包的包升级依赖版本, 包少的时候还不是很成问题, 但当依赖链错综复杂时, 这个升级依赖的过程会极为痛苦.</p><p>为了解决这个问题, 如 Babel, React 等项目会将多个包放到一个代码仓库进行管理, 此种管理方式称为: Monorepo.
+Lerna 是一个优化 Monorepo 工作流的工具.</p><h1 id=lerna-工作模式>Lerna 工作模式</h1><p>一个仓库下有多个包, 那么每个包的版本号如何管理?</p><p>Lerna 支持两种模式: <strong>Fixed/Locked mode (default)</strong> 和 Independent mode
+前者是所有包使用同一个版本号, 后者是每个包独立版本号.</p><p><code>lerna.json</code> 含有配置项 <code>"version": "independent"</code> 表示使用 Independent mode.
+否则 <code>lerna.json</code> 中的 <code>version</code> 即为所有包的共用版本号.</p><p><code>lerna init</code> 默认初始化为 Fixed/Locked mode, <strong>推荐</strong>使用.
+独立版本号会导致版本依赖关系错综复杂, 长期维护会混乱.</p><h1 id=如何使用>如何使用</h1><h2 id=安装>安装</h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>npm install --global lerna
+</code></pre></div><h2 id=初始化项目>初始化项目</h2><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>git init lerna-repo <span style=color:#f92672>&amp;&amp;</span> cd lerna-repo
+lerna init
+</code></pre></div><p>得到的目录结构</p><div class=highlight><pre style=color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-bash data-lang=bash>lerna-repo/
+  packages/
+  package.json
+  lerna.json
+</code></pre></div><h2 id=heading></h2><h2 id=常用命令>常用命令</h2><h3 id=lerna-init>lerna init</h3><p>初始化 或 升级 当前仓库为 lerna 模式.</p><h3 id=lerna-bootstrap>lerna bootstrap</h3><p>安装子包依赖. 相当于每个子包下执行 <code>npm i</code> .
+根目录的依赖并不会安装.</p><h3 id=lerna-create-name>lerna create &lt;name></h3><p>新增子包</p><h3 id=lerna-add-package---dev---scopemodule>lerna add &lt;package> [&ndash;dev] [&ndash;scope=module]</h3><p>新增依赖, 默认会在每个包中添加对应依赖. 通过 <code>--scope</code> 参数指定仅特定包增加此依赖.</p><h3 id=lerna-run-script>lerna run [script]</h3><p>每个子包中执行对应的script命令.</p><h3 id=lerna-exec>lerna exec</h3><p>每个子包中执行对应的命令. 例: <code>lerna exec -- ls</code> 
+与 <code>lerna run</code> 的区别在于执行的命令是 shell 不是 package.json 中的 scripts.</p><h3 id=lerna-version>lerna version</h3><p>创建新的版本.
+会自动维护跟目录及子包package.json中的版本号, 子包直接的依赖版本号也会自动更新.</p><h3 id=lerna-clean>lerna clean</h3><p>删除所有子包中的 node_modules 目录.
+根目录的 node_modules 不会删除.</p><h1 id=更优体验--lerna--yarn>更优体验 = Lerna + Yarn</h1><h2 id=配置-lerna-使用-yarn-管理依赖>配置 lerna 使用 yarn 管理依赖</h2><p>在 <code>lerna.json</code> 中配置 <code>"npmClient": "yarn"</code> 即可.</p><h2 id=配置-lerna-启用-yarn-workspaces>配置 lerna 启用 yarn Workspaces</h2><ol><li>配置<code>lerna.json/useWorkspaces = true</code> ;</li><li>配置根目录 <code>package.json/workspaces = ["pacages/*"]</code> , 此时 lerna.json 中的 <code>packages</code> 配置项将不再使用;</li><li>配置根目录 <code>package.json/private = true</code> ;</li></ol><p>上面三个配置项需同时开启, 只开启一个 lerna 会报错.</p><p>此时执行 <code>lerna bootstrap</code> 等价于 <code>lerna bootstrap --npm-client yarn --use-workspaces</code> 等价于 <code>yarn install</code> </p><p>由于 yarn 会自动 <code>hosit</code> 依赖包, 无需再 <code>lerna bootstrap</code> 时增加参数 <code>--hoist</code> (加了参数 lerna 也会报错)</p><h2 id=依赖管理>依赖管理</h2><p>安装在根目录: <code>yarn add -W xxx</code> 
+安装包: <code>yarn workspace &lt;module> add xxx</code> or <code>lerna add --scope=&lt;module> xxx</code> 
+为所有子包安装包 <code>lerna add xxx</code> or <code>lerna exec -- yarn add xxx</code> </p><p>删除根目录包: <code>yarn remove -W xxx</code> 
+删除包: <code>yarn workspace &lt;module> remove xxx</code> or <code>lerna exec --scpope=&lt;module> -- yarn remove xxx</code> 
+为所有子包删除包 <code>lerna exec -- yarn remove xxx</code> </p><h2 id=lerna-与-yarn-分工>Lerna 与 Yarn 分工</h2><p>包管理的能力交给Lerna, 如版本管理;
+依赖管理的能力交给Yarn, 如依赖包的安装删除;</p><h1 id=常见问题>常见问题</h1><h2 id=如何使用-yarn>如何使用 yarn</h2><p>learn.json 中配置 &ldquo;<code>npmClient": "yarn"</code> </p><h2 id=子包之间如何依赖>子包之间如何依赖</h2><p>直接安装对应包即可.</p><blockquote><p>lerna add xxx [&ndash;scope=module]</p></blockquote><h2 id=子包共用dev包>子包共用dev包</h2><p>比如 eslint/typescript/husky 等包没必要安装多份.
+<code>npm i xxx --save-dev</code>
+<code>yarn add xxx --dev -W</code>  注意 <code>-W</code> 参数.</p><h2 id=如何删除依赖>如何删除依赖</h2><p><code>learn exec [--scope=module] -- npm uninstall xxx</code> 
+<code>learn exec [--scope=module] -- yarn remove xxx</code>
+<code>yarn workspace &lt;module> remove xxx</code> </p><h2 id=避免共用依赖安装多份>避免共用依赖安装多份</h2><blockquote><p>建议使用 yarn 会有更好体验, 以下文字针对 npm 场景.</p></blockquote><p>如所有子包都依赖 <code>lodash</code> , 每个子包的node_modules都会安装一份会浪费磁盘空间.
+可以通过 <code>lerna bootstrap --hoist</code> 将共用的包安装到根目录的 <code>node_modules</code> 目录.
+<code>--hosit</code> 参数不适用 yarn, 但其实 yarn 会自动优化避免包被安装多份.
+可以配置 <code>lerna.json/command.bootsrap.hoist = true</code> 以省去每次都输入 <code>--hoist</code> 参数.</p><h1 id=参考文档>参考文档</h1><p>官方文档: <a href=https://lerna.js.org/>https://lerna.js.org/</a>
+<a href=https://zhuanlan.zhihu.com/p/71385053>基于lerna和yarn workspace的monorepo工作流</a>
+<a href=https://juejin.im/post/6844903918279852046>lerna+yarn workspace+monorepo项目的最佳实践</a></p><div class=blog-tags><a href=https://blog.isayme.org/tags/node.js/>Node.js</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

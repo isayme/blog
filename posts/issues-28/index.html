@@ -1,0 +1,71 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>互斥锁(Mutex) 与 读写锁(RWMutex)</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="互斥锁(Mutex) 与 读写锁(RWMutex)"><meta name=twitter:description content="并发场景中, 互斥锁 与 读写锁 是常用解决访问冲突的两种锁:"><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>互斥锁(Mutex) 与 读写锁(RWMutex)</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><p>并发场景中, 互斥锁 与 读写锁 是常用解决访问冲突的两种锁:</p><h3 id=互斥锁mutex>互斥锁(Mutex)</h3><ul><li>同时只能有一个线程能够获得锁(Lock);</li></ul><h3 id=读写锁rwmutex>读写锁(RWMutex)</h3><ul><li>同时只能有一个线程能够获得写锁定(Lock);</li><li>同时能有多个线程获得读锁定(RLock);</li><li>写锁定(Lock) 与 读锁定(RLock) 互斥;</li></ul><p>从两种锁的特性看, 读写锁能够完全替代互斥锁. 但通常提到读写锁时都会说: 读写锁用于 <strong>读多写少</strong> 的场景.</p><p>我们从 benchmark 结果看原因:</p><blockquote><p>注: 不同系统/硬件结果可能不同</p></blockquote><pre><code>goos: darwin
+goarch: amd64
+pkg: demo
+// 互斥锁 加锁
+BenchmarkMutexLock-4             	300000000	        23.3 ns/op
+// 读写锁 加写锁
+BenchmarkRWMutexLock-4           	200000000	        38.3 ns/op
+// 读写锁 加读锁
+BenchmarkRWMutexRLock-4          	200000000	        31.7 ns/op
+// 互斥锁 加锁+解锁
+BenchmarkMutexLockUnLock-4       	200000000	        30.3 ns/op
+// 读写锁 加写锁+解锁
+BenchmarkRWMutexLockUnLock-4     	100000000	        54.1 ns/op
+// 读写锁 加读锁+解锁
+BenchmarkRWMutexRLockRUnLock-4   	200000000	        38.4 ns/op
+PASS
+ok  	demo	56.978s
+</code></pre><h3 id=从结果上看-读写锁的效率会低于互斥锁-虽然理论上读写锁可以替代互斥锁-但不推荐>从结果上看, 读写锁的效率会低于互斥锁! 虽然理论上读写锁可以替代互斥锁, 但不推荐!</h3><p>赋上 benchmark 代码</p><pre><code>func BenchmarkMutexLock(b *testing.B) {
+	for i := 0; i &lt; b.N; i++ {
+		var lock sync.Mutex
+		lock.Lock()
+	}
+}
+
+func BenchmarkRWMutexLock(b *testing.B) {
+	for i := 0; i &lt; b.N; i++ {
+		var lock sync.RWMutex
+		lock.Lock()
+	}
+}
+
+func BenchmarkRWMutexRLock(b *testing.B) {
+	for i := 0; i &lt; b.N; i++ {
+		var lock sync.RWMutex
+		lock.RLock()
+	}
+}
+
+func BenchmarkMutexLockUnLock(b *testing.B) {
+	for i := 0; i &lt; b.N; i++ {
+		var lock sync.Mutex
+		lock.Lock()
+		lock.Unlock()
+	}
+}
+
+func BenchmarkRWMutexLockUnLock(b *testing.B) {
+	for i := 0; i &lt; b.N; i++ {
+		var lock sync.RWMutex
+		lock.Lock()
+		lock.Unlock()
+	}
+}
+
+func BenchmarkRWMutexRLockRUnLock(b *testing.B) {
+	for i := 0; i &lt; b.N; i++ {
+		var lock sync.RWMutex
+		lock.RLock()
+		lock.RUnlock()
+	}
+}
+</code></pre><div class=blog-tags><a href=https://blog.isayme.org/tags/golang/>golang</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>

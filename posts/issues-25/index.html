@@ -1,0 +1,70 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><title>Golang 中 error 空值(nil) 检测</title><meta name=description content><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=viewport content="width=device-width,initial-scale=1"><link rel=alternate type=application/rss+xml href=https://blog.isayme.org/index.xml title="BLOG - ISAYME"><meta name=twitter:card content="summary"><meta name=twitter:title content="Golang 中 error 空值(nil) 检测"><meta name=twitter:description content="背景 Golang 中, 一般通过返回 error 判定函数异常."><link rel=stylesheet href=https://blog.isayme.org/fontawesome/css/all.min.css><link crossorigin=anonymous href=/css/styles.min.css integrity rel="preload stylesheet" as=style><link rel=stylesheet href=https://blog.isayme.org/css/custom.css><link id=dark-mode-theme crossorigin=anonymous href=/css/dark.min.css integrity rel="preload stylesheet" as=style><script>var darkTheme=document.getElementById('dark-mode-theme')
+var storedTheme=localStorage.getItem('dark-mode-storage')
+if(storedTheme==='dark'){darkTheme.disabled=false}else if(storedTheme==='light'){darkTheme.disabled=true}</script><script defer crossorigin=anonymous src=/js/theme.js integrity></script><script defer crossorigin=anonymous src=/js/instantpage.min.js integrity></script><meta name=generator content="Hugo 0.78.1"></head><body><header><nav class=navbar><div class=nav><ul class=nav-links></ul></div></nav><div class=intro-header><div class=container><div class=posts-heading><h1>Golang 中 error 空值(nil) 检测</h1></div></div></div></header><div class=container role=main><article class=article class=blog-post><h2 id=背景>背景</h2><p>Golang 中, 一般通过返回 error 判定函数异常. 常用的模式是:</p><pre><code>if err != nil {
+    panic(err) // 更多的是 return err
+}
+</code></pre><p>这样的代码片会遍布代码库时就会很烦, 所以有人就想少写两行:</p><pre><code>checkErr(err)
+
+func checkErr(err error) {
+    if err != nil {
+        panic(err)
+    }
+}
+</code></pre><p>当然, 有人反对 checkErr 的写法: <a href=https://pocketgophers.com/checkErr/>Why You Should Not Use checkErr</a>, 这里不讨论偏好, 关注的是: <strong>这样写严谨吗?</strong></p><h2 id=此-nil-非彼-nil>此 nil 非彼 nil</h2><p>这里我们需要一个自定义的错误(实现了error interface):</p><pre><code>type CustomError struct {}
+func (err *CustomError) Error() string {
+	return &quot;CustomError&quot;
+}
+</code></pre><h3 id=场景1-声明一个自定义错误指针变量-然后与-nil-比较>场景1: 声明一个自定义错误指针变量, 然后与 nil 比较:</h3><p><a href=https://play.golang.org/p/lzG8UcRovrX>https://play.golang.org/p/lzG8UcRovrX</a></p><pre><code>var err *CustomError
+fmt.Println(err == nil) // return true
+</code></pre><p>看起来很正常!</p><h3 id=场景2-声明一个函数-返回-nil>场景2: 声明一个函数, 返回 nil:</h3><p><a href=https://play.golang.org/p/Zf_r1CPAz2W>https://play.golang.org/p/Zf_r1CPAz2W</a></p><pre><code>func test() error {
+	return nil
+}
+
+fmt.Println(test() == nil) // return true
+</code></pre><p>似乎也没问题!</p><h3 id=场景2-声明一个函数-返回自定义错误-nil-指针>场景2+: 声明一个函数, 返回自定义错误 nil 指针:</h3><p><a href=https://play.golang.org/p/hGhXxWSZ6wM>https://play.golang.org/p/hGhXxWSZ6wM</a></p><pre><code>func test() error {
+	var err *CustomError
+	return err
+}
+
+fmt.Println(test() == nil) // return false
+</code></pre><p>嗯? 返回不是 <code>true</code> ?</p><h3 id=场景3-声明函数-返回自定义错误指针>场景3: 声明函数, 返回自定义错误指针</h3><p><a href=https://play.golang.org/p/PEKq5eYOkVC>https://play.golang.org/p/PEKq5eYOkVC</a></p><pre><code>func test() *CustomError {
+	return nil
+}
+
+fmt.Println(test() == nil) // return true
+</code></pre><p>又返回 <code>true</code> 了?</p><h3 id=场景3-声明函数-返回自定义错误指针-1>场景3+: 声明函数, 返回自定义错误指针</h3><p><a href=https://play.golang.org/p/WOatukzyYgi>https://play.golang.org/p/WOatukzyYgi</a></p><pre><code>func test() *CustomError {
+	var err *CustomError
+	return err
+}
+
+fmt.Println(test() == nil)	// return true
+</code></pre><p>也是 <code>true</code>.</p><h2 id=背后的原因>背后的原因</h2><p>官方文档对此做了说明: <a href=https://golang.org/doc/faq#nil_error>Why is my nil error value not equal to nil?</a>, 一句话解释是: error 是 interface, 比较时会同时比较 <strong><code>类型</code></strong> 及 <code>值</code>.</p><h2 id=如何正确的判断-nil-error->如何正确的判断 nil error ?</h2><p>使用反射. 具体可以看 <a href=https://github.com/stretchr/testify>stretchr/testify</a> 中的 <a href=https://github.com/stretchr/testify/blob/f35b8ab0b5a2cef36673838d662e249dd9c94686/assert/assertions.go#L419>isNil 实现</a></p><pre><code>func isNil(object interface{}) bool {
+	if object == nil {
+		return true
+	}
+
+	value := reflect.ValueOf(object)
+	kind := value.Kind()
+	if kind &gt;= reflect.Chan &amp;&amp; kind &lt;= reflect.Slice &amp;&amp; value.IsNil() {
+		return true
+	}
+
+	return false
+}
+</code></pre><h2 id=回到-checkerr>回到 checkErr</h2><p>这里给个不同方式的对比, 对照官方的解释理解下:
+<a href=https://play.golang.org/p/_o5nfQYt3nl>https://play.golang.org/p/_o5nfQYt3nl</a></p><table><thead><tr><th>场景</th><th style=text-align:center>err == nil</th><th style=text-align:center>普通版本 isNil</th><th style=text-align:center>stretchr/testify 版本 isNil</th></tr></thead><tbody><tr><td><img src=https://user-images.githubusercontent.com/1747852/44707603-86240c00-aad7-11e8-8ad4-d6878f4a2bbd.png alt=image></td><td style=text-align:center>true</td><td style=text-align:center>true</td><td style=text-align:center>true</td></tr><tr><td><img src=https://user-images.githubusercontent.com/1747852/44707632-9fc55380-aad7-11e8-9acf-c948d6b6dd34.png alt=image></td><td style=text-align:center>true</td><td style=text-align:center>true</td><td style=text-align:center>true</td></tr><tr><td><img src=https://user-images.githubusercontent.com/1747852/44707655-b53a7d80-aad7-11e8-932e-ed3b05a5edd6.png alt=image></td><td style=text-align:center>false</td><td style=text-align:center>false</td><td style=text-align:center>true</td></tr><tr><td><img src=https://user-images.githubusercontent.com/1747852/44707668-bbc8f500-aad7-11e8-8476-93d3726681c9.png alt=image></td><td style=text-align:center>true</td><td style=text-align:center>false</td><td style=text-align:center>true</td></tr><tr><td><img src=https://user-images.githubusercontent.com/1747852/44707677-c5eaf380-aad7-11e8-9da2-fe40e5170c2e.png alt=image></td><td style=text-align:center>true</td><td style=text-align:center>false</td><td style=text-align:center>true</td></tr></tbody></table><h2 id=实践建议>实践建议</h2><h3 id=函数定义时-返回的错误永远是error类型>函数定义时, 返回的错误永远是<code>error</code>类型</h3><pre><code>func a() *CustomError // bad
+func b() error // good
+</code></pre><h3 id=如果返回的错误是自定义类型-需要返回空时明确return-nil>如果返回的错误是自定义类型, 需要返回空时明确<code>return nil</code></h3><pre><code>// bad
+var err *CustomError
+return err
+
+// good
+return nil
+</code></pre><h2 id=参考资料>参考资料</h2><ul><li><a href=https://golang.org/doc/faq#nil_error>Why is my nil error value not equal to nil?</a></li></ul><div class=blog-tags><a href=https://blog.isayme.org/tags/golang/>golang</a>&nbsp;</div></article></div><footer><div class=social-icons></div><div class=container><p class="credits copyright"><a href=https://blog.isayme.org/about></a>&nbsp;&copy;
+2024
+&nbsp;/&nbsp;
+<a href=https://blog.isayme.org/>BLOG - ISAYME</a>
+&nbsp;&ndash;&nbsp;
+<em class="fas fa-moon" id=dark-mode-toggle></em></p><p class="credits theme-by">Powered By <a href=https://gohugo.io>Hugo</a>&nbsp;
+Theme
+<a href=https://github.com/matsuyoshi30/harbor>Harbor</a></p></div></footer></body></html>
