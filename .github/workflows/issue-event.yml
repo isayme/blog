@@ -39,7 +39,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git rm ./content/posts/${{ github.event.issue.number }}.md
-          git commit -a -m "remove content/posts/${{ github.event.issue.number }}.md"
+          git commit -a -m "remove content/posts/issues-${{ github.event.issue.number }}.md"
 
       - name: Push changes
         id: git-push
