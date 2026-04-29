@@ -6,6 +6,8 @@ on:
 
 jobs:
   build:
+    # This condition ensures the job only runs if the issue author is the repo owner
+    if: github.event.issue.user.login == github.repository_owner
     runs-on: ubuntu-latest
     outputs:
       commit_hash: ${{ steps.git-push.outputs.commit_hash }}
