@@ -60,7 +60,7 @@ jobs:
           ref: ${{ needs.build.outputs.commit_hash }}
 
       - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v2
+        uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: "0.78.1"
 
